@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('ws_id', false, true);
             $table->json("chairs");
+            $table->timestamp("date");
             $table->timestamps();
             $table->foreign('ws_id')->references('id')->on('weekly_schedule')->cascadeOnDelete()->cascadeOnDelete();
             $table->softDeletes();

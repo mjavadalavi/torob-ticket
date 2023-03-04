@@ -8,4 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class WeeklySchedule extends Model
 {
     use HasFactory;
+    protected $table = 'weekly_schedule';
 }
