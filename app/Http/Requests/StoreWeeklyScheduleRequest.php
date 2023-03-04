@@ -23,7 +23,30 @@ class StoreWeeklyScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'destination_city_code' => 'required|string|max:5',
+            'destination_terminal_code' => 'required|string|max:5',
+            'source_city_code' => 'required|string|max:5',
+            'source_terminal_code' => 'required|string|max:5',
+            'day_number' => 'required|integer|max:7|min:0',
+            'travelling_time' => 'required|integer',
+            'passenger_count' => 'required|integer',
+            'bus_type' => 'required|string|max:5',
+            'price' => 'requited|integer'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'destination_city_code.required' => 'destination_city_code is required by string format and max len is 5 char.',
+            'destination_terminal_code.required' => 'destination_terminal_code is required by string format and max len is 5 char.',
+            'source_city_code.required' => 'source_city_code is required and max len is 5 char.',
+            'source_terminal_code.required' => 'source_terminal_code must be required and max len is 5 char.',
+            'day_number.required' => 'day_number is integer and must be required.',
+            'travelling_time.required' => 'travelling_time is integer and must be required.',
+            'passenger_count.required' => 'passenger_count is integer and must be required.',
+            'bus_type.required' => 'bus_type is required by string format and max len is 5 char.',
+            'price.required' => 'price is integer and required.',
         ];
     }
 }

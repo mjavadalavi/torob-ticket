@@ -23,7 +23,14 @@ class ListWeeklyScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'action' => 'required|unique:string|min:3|max:4',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'action.required' => 'actions must be required by [source, destination or terminals].',
         ];
     }
 }

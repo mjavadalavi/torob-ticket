@@ -23,7 +23,18 @@ class SearchWeeklyScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'destination' => 'required|max:5',
+            'source' => 'required|max:5',
+            'datetime' => 'date_format:Y-m-d'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'datetime.required' => 'datetime must be required by format Y-m-d.',
+            'destination.required' => 'destination must be required.',
+            'source.required' => 'source must be required.',
         ];
     }
 }
