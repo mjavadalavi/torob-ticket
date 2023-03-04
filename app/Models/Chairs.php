@@ -10,5 +10,7 @@ class Chairs extends Model
     use HasFactory;
 
     protected $table = 'bus_empty_chairs';
-
+    protected $casts = [
+        'chairs' => "array",
+    ];
 }

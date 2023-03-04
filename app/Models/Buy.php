@@ -11,4 +11,8 @@ class Buy extends Model
 
     protected $table = 'buy';
 
+    protected $casts = [
+        'cancellation' => "boolean",
+        'passenger_ids' => 'array'
+    ];
 }

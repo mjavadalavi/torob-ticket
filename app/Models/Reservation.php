@@ -11,4 +11,8 @@ class Reservation extends Model
 
     protected $table = 'reservation';
 
+    protected $casts = [
+        'cancellation' => "boolean",
+        'chairs' => "array"
+    ];
 }
