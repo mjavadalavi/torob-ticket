@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\BuyController;
+use App\Http\Controllers\ReserveController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\WeeklyScheduleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,19 +20,19 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('ticket')->group(function () {
 
     Route::prefix('list')->group(function () {
-        Route::match(['get', 'post'], '/sources', "WeeklyScheduleController@sources")->name('sources');
-        Route::match(['get', 'post'], '/destinations', "WeeklyScheduleController@destinations")->name('destinations');
-        Route::match(['get', 'post'], '/terminals', "WeeklyScheduleController@terminals")->name('terminals');
+        Route::match(['get', 'post'], '/sources', [WeeklyScheduleController::class, "index"])->name('sources');
+        Route::match(['get', 'post'], '/destinations', [WeeklyScheduleController::class, "index"])->name('destinations');
+        Route::match(['get', 'post'], '/terminals', [WeeklyScheduleController::class, "index"])->name('terminals');
     });
 
-    Route::match(['get', 'post'],'/searches', "SearchController@index")->name('searches');
+    Route::match(['get', 'post'],'/searches', [SearchController::class,"index"])->name('searches');
 
-    Route::post('/reserve', 'ReserveController@store')->name("reserve_store");
-    Route::post('/cancellation', 'ReserveController@cancellation')->name("reserve_cancellation");
+    Route::post('/reserve', [ReserveController::class, 'store'])->name("reserve_store");
+    Route::post('/cancellation', [ReserveController::class, 'cancellation'])->name("reserve_cancellation");
 
-    Route::post('/buy', 'BuyController@store')->name("buy_store");
-    Route::post('/extradition', 'BuyController@extradition')->name("extradition");
+    Route::post('/buy', [BuyController::class, 'store'])->name("buy_store");
+    Route::post('/extradition', [BuyController::class, 'extradition'])->name("extradition");
 
-    Route::post('/check', 'BuyController@check')->name("check");
+    Route::post('/check', [BuyController::class, 'check'])->name("check");
 
 });
