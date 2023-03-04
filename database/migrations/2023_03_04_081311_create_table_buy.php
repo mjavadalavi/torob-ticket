@@ -17,7 +17,11 @@ return new class extends Migration
             $table->json('passenger_ids');
             $table->boolean('cancellation')->default(false);
             $table->timestamps();
-            $table->foreign('reserve_id')->references('id')->on('reservation')->cascadeOnDelete()->cascadeOnDelete();
+            $table->foreign('reserve_id')
+                ->references('id')
+                ->on('reservation')
+                ->cascadeOnDelete()
+                ->cascadeOnDelete();
             $table->softDeletes();
         });
     }

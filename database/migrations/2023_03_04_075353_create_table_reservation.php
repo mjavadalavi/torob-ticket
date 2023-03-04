@@ -18,7 +18,11 @@ return new class extends Migration
             $table->json('chairs');
             $table->boolean('cancellation')->default(false);
             $table->timestamps();
-            $table->foreign('ws_id')->references('id')->on('weekly_schedule')->cascadeOnDelete()->cascadeOnDelete();
+            $table->foreign('ws_id')
+                ->references('id')
+                ->on('weekly_schedule')
+                ->cascadeOnDelete()
+                ->cascadeOnDelete();
             $table->softDeletes();
         });
     }
