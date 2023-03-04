@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('reserve_id', false,true);
             $table->json('passenger_ids');
+            $table->boolean('cancellation')->default(false);
             $table->timestamps();
             $table->foreign('reserve_id')->references('id')->on('reservation')->cascadeOnDelete()->cascadeOnDelete();
             $table->softDeletes();

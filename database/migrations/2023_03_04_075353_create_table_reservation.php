@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('ws_id', false, true);
             $table->integer('passenger_count', false, true);
             $table->json('chairs');
+            $table->boolean('cancellation')->default(false);
             $table->timestamps();
             $table->foreign('ws_id')->references('id')->on('weekly_schedule')->cascadeOnDelete()->cascadeOnDelete();
             $table->softDeletes();
