@@ -23,7 +23,18 @@ class StoreReserveRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'search_id' => 'required|string',
+            'passenger_count' => 'required|int',
+            'chairs' => 'required|array'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'search_id.required' => 'a str hash of searches values is required.',
+            'passenger_count.required' => 'count of passenger is required.',
+            'chairs.required' => 'an array of chairs.',
         ];
     }
 }
