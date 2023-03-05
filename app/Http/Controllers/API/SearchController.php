@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Classes\Encoding;
 use App\Classes\ProjectResource;
 use App\Enums\SettingsSystem;
 use App\Enums\Status;
@@ -44,11 +45,26 @@ class SearchController extends Controller
             $max_date = Carbon::now()->addWeeks(SettingsSystem::Max_Week);
             $user_date = Carbon::parse($request->input("datetime"));
             if (!$user_date->gt($max_date)) {
-                $weekly_schedule_city = WeeklySchedule::with("chairs")->where("source_city_id",$source)->where("destination_city_id", $destination)->whereDate("date","=",$user_date)->get();
-                $weekly_schedule_terminal = WeeklySchedule::with("chairs")->where("source_terminal_id",$source)->where("destination_terminal_id", $destination)->whereDate("date","=",$user_date)->get();
+
+                $weekly_schedule_city = WeeklySchedule::with("chairs")
+                    ->where("source_city_id", $source)
+                    ->where("destination_city_id", $destination)
+                    ->whereDate("date", "=",$user_date)
+                    ->get(["weekly_schedule.*", "chairs.id", "chairs.chairs"]);
+
+                $weekly_schedule_terminal = WeeklySchedule::with("chairs")
+                    ->where("source_terminal_id", $source)
+                    ->where("destination_terminal_id", $destination)
+                    ->whereDate("date", "=",$user_date)
+                    ->get(["weekly_schedule.*", "chairs.id", "chairs.chairs"]);
+
                 $data = array_unique($weekly_schedule_city->merge($weekly_schedule_terminal));
                 if(count($data)>0){
-                    return (new ProjectResource($data))
+                    $search_data = null;
+                    foreach ($data as $item){
+                        $search_data[] = ["search_code" => Encoding::base64url_encode($item["weekly_schedule.id"]."|".$item["weekly_schedule.id"]), "item" => $item];
+                    }
+                    return (new ProjectResource($search_data))
                         ->response()
                         ->setStatusCode(Response::HTTP_OK)
                         ->header('Content-Type', 'application/json');
