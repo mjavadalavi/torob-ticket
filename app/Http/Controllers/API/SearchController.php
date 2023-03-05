@@ -62,7 +62,7 @@ class SearchController extends Controller
                 if(count($data)>0){
                     $search_data = null;
                     foreach ($data as $item){
-                        $search_data[] = ["search_code" => Encoding::base64url_encode($item["weekly_schedule.id"]."|".$item["weekly_schedule.id"]), "item" => $item];
+                        $search_data[] = ["search_code" => Encoding::base64url_encode($item["weekly_schedule.id"]."|".$item["chairs.id"]), "item" => $item];
                     }
                     return (new ProjectResource($search_data))
                         ->response()
