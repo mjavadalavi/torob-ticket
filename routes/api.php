@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Controllers\BuyController;
-use App\Http\Controllers\ReserveController;
-use App\Http\Controllers\SearchController;
-use App\Http\Controllers\WeeklyScheduleController;
+use App\Http\Controllers\API\BuyController;
+use App\Http\Controllers\API\ReserveController;
+use App\Http\Controllers\API\SearchController;
+use App\Http\Controllers\API\WeeklyScheduleController;
 use Illuminate\Support\Facades\Route;
 
 /*
