@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('weekly_schedule', function (Blueprint $table) {
+            $table->id();
             $table->string("source_city_id", 5);
             $table->string("source_terminal_id", 5);
             $table->string("destination_city_id", 5);
@@ -21,7 +22,7 @@ return new class extends Migration
             $table->smallInteger("traveling_time");
             $table->tinyInteger("capacity");
             $table->string("bus_type", 5);
-            $table->integer("price");
+            $table->char("price", 8);
             $table->timestamps();
             $table->softDeletes();
         });

@@ -31,7 +31,8 @@ class StoreWeeklyScheduleRequest extends FormRequest
             'travelling_time' => 'required|integer',
             'passenger_count' => 'required|integer',
             'bus_type' => 'required|string|max:5',
-            'price' => 'requited|integer'
+            'capacity' => 'requited|integer|max:30|min:20',
+            'price' => 'requited|integer|max:99999999'
         ];
     }
 
@@ -46,7 +47,8 @@ class StoreWeeklyScheduleRequest extends FormRequest
             'travelling_time.required' => 'travelling_time is integer and must be required.',
             'passenger_count.required' => 'passenger_count is integer and must be required.',
             'bus_type.required' => 'bus_type is required by string format and max len is 5 char.',
-            'price.required' => 'price is integer and required.',
+            'capacity.required' => 'capacity is integer between 20 and 30 and required.',
+            'price.required' => 'price is integer and lower than 99,999,999 and required.',
         ];
     }
 }

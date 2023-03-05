@@ -2,16 +2,33 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Classes\ProjectResource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ListWeeklyScheduleRequest;
 use App\Http\Requests\StoreWeeklyScheduleRequest;
 use App\Models\WeeklySchedule;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class WeeklyScheduleController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * @OA\Get(
+     *      path="/index",
+     *      operationId="Lists",
+     *      tags={"source", "destination", "terminals"},
+     *      summary="Get list of source, destination or terminals ",
+     *      description="Returns list of source, destination or terminals",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonResponse(ref="#/components/schemas/ProjectResource")
+     *       ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not Found"
+     *      )
+     *     )
      */
     public function index(ListWeeklyScheduleRequest $request)
     {
@@ -37,15 +54,34 @@ class WeeklyScheduleController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * @OA\Post(
+     *      path="/projects",
+     *      operationId="storeweeklyschedule",
+     *      tags={"WeeklySchedule"},
+     *      summary="Store new WeeklySchedule",
+     *      description="Returns json of result storing data",
+     *      @OA\RequestBody(
+     *          required=true,
+     *          @OA\JsonContent(ref="#/components/schemas/StoreWeeklyScheduleRequest")
+     *      ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *          @OA\JsonContent(ref="#/components/schemas/WeeklySchedule")
+     *       ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request"
+     *      )
+     * )
      */
     public function store(StoreWeeklyScheduleRequest $request)
     {
-        $validate = $request->validated();
+        $project = WeeklySchedule::create($request->all());
 
-        if($validate){
-            //todo save data.
-        }
+        return (new ProjectResource($project))
+            ->response()
+            ->setStatusCode(Response::HTTP_CREATED);
     }
 
     /**

@@ -18,12 +18,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('ticket')->group(function () {
-
-    Route::prefix('list')->group(function () {
-        Route::match(['get', 'post'], '/sources', [WeeklyScheduleController::class, "index"])->name('sources');
-        Route::match(['get', 'post'], '/destinations', [WeeklyScheduleController::class, "index"])->name('destinations');
-        Route::match(['get', 'post'], '/terminals', [WeeklyScheduleController::class, "index"])->name('terminals');
-    });
+    Route::match(['get', 'post'], '/list/index', [WeeklyScheduleController::class, "index"])->name('index');
+    Route::post('weekly-schedule', [WeeklyScheduleController::class, "store"])->name('store');
 
     Route::match(['get', 'post'],'/searches', [SearchController::class,"index"])->name('searches');
 
@@ -34,5 +30,4 @@ Route::prefix('ticket')->group(function () {
     Route::post('/extradition', [BuyController::class, 'extradition'])->name("extradition");
 
     Route::post('/check', [BuyController::class, 'check'])->name("check");
-
 });
