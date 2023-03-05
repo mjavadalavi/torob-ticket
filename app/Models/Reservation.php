@@ -17,6 +17,9 @@ class Reservation extends Model
         'chairs' => "array"
     ];
 
+    public function weekly_schedule() {
+        return $this->belongsTo(WeeklySchedule::class);
+    }
     /**
      * Get the buys for the blog post.
      */
