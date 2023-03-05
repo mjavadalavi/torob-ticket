@@ -11,52 +11,61 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelReserveRequest;
 use App\Http\Requests\StoreReserveRequest;
 use App\Models\Reservation;
-use Illuminate\Http\JsonResponse as JsonResponseAlias;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class ReserveController extends Controller
 {
     /**
      * @OA\Post(
-     *      path="/Reserve",
+     *      path="/reserve",
      *      operationId="storeReserveRequest",
      *      tags={"StoreReserve"},
      *      summary="Store new Reserve",
      *      description="Returns json of result storing data",
      *      @OA\RequestBody(
      *          required=true,
-     *          @OA\JsonContent(ref="#/components/schemas/StoreReserveRequest")
+     *          @OA\JsonContent(ref="App\Http\Requests\StoreReserveRequest")
      *      ),
      *      @OA\Response(
      *          response=201,
      *          description="Successful operation",
-     *          @OA\JsonContent(ref="#/components/schemas/Reservation")
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *       ),
      *      @OA\Response(
      *          response=400,
-     *          description="Bad Request"
+     *          description="Bad Request",
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *      )
      * )
      */
+
     public function store(StoreReserveRequest $request)
     {
         if ($request->validated()){
+
             $search_id = explode('|',Encoding::base64url_decode($request->input("search_id")));
             $passenger_count = $request->input("passenger_count");
             $chairs = $request->input("chairs");
+
             $reserve = new Reservation();
             $reserve->ws_id = $search_id[0];
             $reserve->chair_id = $search_id[1];
             $reserve->passenger_count = $passenger_count;
             $reserve->chairs = $chairs;
             $reserve->save();
-            return response()
-                ->json(['status' => Status::Success , "code" => StatusCode::Success])
+            return (new ProjectResource(['status' => Status::Success , "code" => StatusCode::Success]))
+                ->response()
                 ->setStatusCode(Response::HTTP_ACCEPTED)
                 ->header('Content-Type', 'application/json');
+
         }else{
-            return response()
-                ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+            return (new ProjectResource(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success]))
+                ->response()
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->header('Content-Type', 'application/json');
         }
@@ -71,24 +80,32 @@ class ReserveController extends Controller
      *      description="Returns json of result cancelling.",
      *      @OA\RequestBody(
      *          required=true,
-     *          @OA\JsonContent(ref="#/components/schemas/CancelReserveRequest")
+     *          @OA\JsonContent(ref="App\Http\Requests\CancelReserveRequest")
      *      ),
      *      @OA\Response(
      *          response=201,
      *          description="Successful operation",
-     *          @OA\JsonContent(ref="#/components/schemas/Reservation")
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *       ),
      *      @OA\Response(
      *          response=404,
-     *          description="Not Found"
-     *      )
+     *          description="Not Found",
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
+     *      ),
      *      @OA\Response(
      *          response=400,
-     *          description="Bad Request"
+     *          description="Bad Request",
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *      )
      * )
      */
-    public function cancellation(CancelReserveRequest $request)
+    public function cancellation(CancelReserveRequest $request):JsonResponse
     {
         if ($request->validated()){
             $reserve = Reservation::find($request->input("reserve_id"));

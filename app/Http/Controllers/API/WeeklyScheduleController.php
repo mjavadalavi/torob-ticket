@@ -17,22 +17,27 @@ class WeeklyScheduleController extends Controller
     /**
      * @OA\Get(
      *      path="/index",
-     *      operationId="Lists",
+     *      operationId="getlistItems",
      *      tags={"source", "destination", "terminals"},
      *      summary="Get list of source, destination or terminals ",
      *      description="Returns list of source, destination or terminals",
      *      @OA\Response(
      *          response=200,
      *          description="Successful operation",
-     *          @OA\JsonResponse(ref="#/components/schemas/ProjectResource")
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *       ),
      *      @OA\Response(
      *          response=404,
-     *          description="Not Found"
+     *          description="Not Found",
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *      )
-     *     )
+     *)
      */
-    public function index(ListWeeklyScheduleRequest $request)
+    public function index(ListWeeklyScheduleRequest $request): JsonResponse
     {
         $data = null;
         if($request->validated()){
@@ -49,8 +54,8 @@ class WeeklyScheduleController extends Controller
                     if ($validated)
                         $data = WeeklySchedule::where("destination_city_id", "=", $request->input("destination"))->get("source_city_id");
                     else
-                        return response()
-                            ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+                        return (new ProjectResource(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed]))
+                            ->response()
                             ->setStatusCode(Response::HTTP_BAD_REQUEST)
                             ->header('Content-Type', 'application/json');
                     break;
@@ -63,23 +68,23 @@ class WeeklyScheduleController extends Controller
                     if ($validated)
                         $data = WeeklySchedule::where("source_terminal_id","=",$request->input("source"))->get("source_city_id", "source_terminal_id");
                     else
-                        return response()
-                            ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+                        return (new ProjectResource(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed]))
+                            ->response()
                             ->setStatusCode(Response::HTTP_BAD_REQUEST)
                             ->header('Content-Type', 'application/json');
                     break;
             }
             if ($data == null)
-                return response()
-                    ->json(['status' => Status::Failed , "code" => StatusCode::Failed])
+                return (new ProjectResource(['status' => Status::Failed , "code" => StatusCode::Failed]))
+                    ->response()
                     ->header('Content-Type', 'application/json');
             else
                 return (new ProjectResource($data))
                         ->response()
                         ->header('Content-Type', 'application/json');
         }else{
-            return response()
-                ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+            return (new ProjectResource(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed]))
+                ->response()
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->header('Content-Type', 'application/json');
         }
@@ -87,24 +92,21 @@ class WeeklyScheduleController extends Controller
 
     /**
      * @OA\Post(
-     *      path="/weekly-schedule",
-     *      operationId="storeweeklyschedule",
-     *      tags={"WeeklySchedule"},
-     *      summary="Store new WeeklySchedule",
-     *      description="Returns json of result storing data",
-     *      @OA\RequestBody(
-     *          required=true,
-     *          @OA\JsonContent(ref="#/components/schemas/StoreWeeklyScheduleRequest")
-     *      ),
-     *      @OA\Response(
-     *          response=201,
-     *          description="Successful operation",
-     *          @OA\JsonContent(ref="#/components/schemas/WeeklySchedule")
-     *       ),
-     *      @OA\Response(
-     *          response=400,
-     *          description="Bad Request"
-     *      )
+     *     path="/weekly-schedule",
+     *     summary="Adds a new weekly schedule - with example",
+     *     @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(ref="App\Models\WeeklySchedule"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OK",
+     *         @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *         )
+     *     )
      * )
      */
     public function store(StoreWeeklyScheduleRequest $request): JsonResponse
@@ -117,8 +119,8 @@ class WeeklyScheduleController extends Controller
                 ->setStatusCode(Response::HTTP_CREATED)
                 ->header('Content-Type', 'application/json');
         }else{
-            return response()
-                ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+            return (new ProjectResource(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed]))
+                ->response()
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->header('Content-Type', 'application/json');
         }

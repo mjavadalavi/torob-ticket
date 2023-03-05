@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SearchWeeklyScheduleRequest;
 use App\Models\WeeklySchedule;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class SearchController extends Controller
@@ -18,26 +19,35 @@ class SearchController extends Controller
     /**
      * @OA\Get(
      *      path="/searches",
-     *      operationId="Lists",
+     *      operationId="searches",
      *      tags={"source", "destination", "datetime"},
      *      summary="Get list of travells ",
      *      description="Returns json list of weekly schedule",
      *      @OA\Response(
      *          response=200,
-     *          description="Successful operation",
-     *          @OA\JsonResponse(ref="#/components/schemas/ProjectResource")
-     *       ),
+     *          description="OK",
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
+     *      ),
      *      @OA\Response(
      *          response=404,
-     *          description="Not Found"
+     *          description="Not Found",
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *      ),
      *      @OA\Response(
      *          response=400,
-     *          description="Http Bad Request"
+     *          description="Http Bad Request",
+     *          @OA\JsonContent(
+     *              @OA\Schema(ref="App\Classes\ProjectResource")
+     *          )
      *      )
-     *     )
+     * )
      */
-    public function index(SearchWeeklyScheduleRequest $request)
+
+    public function index(SearchWeeklyScheduleRequest $request): JsonResponse
     {
         if ($request->validated()){
             $source = $request->input("source");
