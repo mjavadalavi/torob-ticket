@@ -27,15 +27,15 @@ class WeeklySchedule extends Model
     protected $table = 'weekly_schedule';
 
     /**
-     * Get the reservations for the blog post.
+     * Get the reservations for the weekly schedule.
      */
-    public function reservations(): HasMany
+    public function Reservations(): HasMany
     {
         return $this->hasMany(Reservation::class);
     }
 
     /**
-     * Get the chairs for the blog post.
+     * Get the chairs for the  weekly schedule.
      */
     public function chairs(): HasMany
     {
@@ -52,7 +52,7 @@ class WeeklySchedule extends Model
      *
      * @var integer
      */
-    private $id;
+    private int $id;
 
     /**
      * @OA\Property(
@@ -64,7 +64,7 @@ class WeeklySchedule extends Model
      *
      * @var string
      */
-    private $source_city_id;
+    private string $source_city_id;
 
     /**
      * @OA\Property(
@@ -76,7 +76,7 @@ class WeeklySchedule extends Model
      *
      * @var string
      */
-    private $source_terminal_id;
+    private string $source_terminal_id;
 
     /**
      * @OA\Property(
@@ -88,7 +88,7 @@ class WeeklySchedule extends Model
      *
      * @var string
      */
-    private $destination_city_id;
+    private string $destination_city_id;
 
     /**
      * @OA\Property(
@@ -100,7 +100,7 @@ class WeeklySchedule extends Model
      *
      * @var string
      */
-    private $destination_terminal_id;
+    private string $destination_terminal_id;
 
     /**
      * @OA\Property(
@@ -112,7 +112,7 @@ class WeeklySchedule extends Model
      *
      * @var integer
      */
-    private $moving_day_number;
+    private int $moving_day_number;
 
     /**
      * @OA\Property(
@@ -124,7 +124,7 @@ class WeeklySchedule extends Model
      *
      * @var integer
      */
-    private $moving_time_seconds;
+    private int $moving_time_seconds;
 
     /**
      * @OA\Property(
@@ -136,7 +136,7 @@ class WeeklySchedule extends Model
      *
      * @var integer
      */
-    private $traveling_time;
+    private int $traveling_time;
 
     /**
      * @OA\Property(
@@ -148,7 +148,7 @@ class WeeklySchedule extends Model
      *
      * @var integer
      */
-    private $capacity;
+    private int $capacity;
 
     /**
      * @OA\Property(
@@ -160,7 +160,7 @@ class WeeklySchedule extends Model
      *
      * @var string
      */
-    private $bus_type;
+    private string $bus_type;
 
     /**
      * @OA\Property(
