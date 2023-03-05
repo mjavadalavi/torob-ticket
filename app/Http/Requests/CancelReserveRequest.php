@@ -23,7 +23,14 @@ class CancelReserveRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "reserve_id" => "required|int",
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'reserve_id.required' => 'a integer id of reserved bus is required.'
         ];
     }
 }
