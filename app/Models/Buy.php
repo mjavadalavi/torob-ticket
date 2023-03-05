@@ -15,4 +15,8 @@ class Buy extends Model
         'cancellation' => "boolean",
         'passenger_ids' => 'array'
     ];
+
+    public function Reservation() {
+        return $this->belongsTo(Reservation::class);
+    }
 }
