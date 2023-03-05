@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('ticket')->group(function () {
     Route::match(['get', 'post'], '/list/index', [WeeklyScheduleController::class, "index"])->name('index');
-    Route::post('weekly-schedule', [WeeklyScheduleController::class, "store"])->name('store');
+    Route::post('/weekly-schedule', [WeeklyScheduleController::class, "store"])->name('store');
 
     Route::match(['get', 'post'],'/searches', [SearchController::class,"index"])->name('searches');
 
