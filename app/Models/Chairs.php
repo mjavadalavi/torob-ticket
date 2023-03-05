@@ -2,10 +2,19 @@
 
 namespace App\Models;
 
-use Carbon\Traits\Date;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @OA\Schema(
+ *     title="Chairs",
+ *     description="Chairs model",
+ *     @OA\Xml(
+ *         name="Chairs"
+ *     )
+ * )
+ */
 class Chairs extends Model
 {
     use HasFactory;
@@ -15,7 +24,8 @@ class Chairs extends Model
         'chairs' => "array",
     ];
 
-    public function weekly_schedule() {
+    public function WeeklySchedule(): BelongsTo
+    {
         return $this->belongsTo(WeeklySchedule::class);
     }
 
@@ -29,7 +39,7 @@ class Chairs extends Model
      *
      * @var integer
      */
-    private $id;
+    private int $id;
 
     /**
      * @OA\Property(
@@ -41,7 +51,7 @@ class Chairs extends Model
      *
      * @var integer
      */
-    private $ws_id;
+    private int $ws_id;
 
     /**
      * @OA\Property(
@@ -53,18 +63,18 @@ class Chairs extends Model
      *
      * @var array
      */
-    private $chairs;
+    private array $chairs;
 
     /**
      * @OA\Property(
      *     title="date",
      *     description="date of teravelling",
-     *     format="date",
+     *     format="string",
      *     example=1
      * )
      *
-     * @var Date
+     * @var string
      */
-    private $date;
+    private string $date;
 
 }
