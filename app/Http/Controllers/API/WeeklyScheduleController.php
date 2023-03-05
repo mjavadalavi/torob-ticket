@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ListWeeklyScheduleRequest;
 use App\Http\Requests\StoreWeeklyScheduleRequest;
 use App\Models\WeeklySchedule;
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class WeeklyScheduleController extends Controller
@@ -106,7 +107,7 @@ class WeeklyScheduleController extends Controller
      *      )
      * )
      */
-    public function store(StoreWeeklyScheduleRequest $request)
+    public function store(StoreWeeklyScheduleRequest $request): JsonResponse
     {
         if ($request->validated()) {
             $weekly_schedule = WeeklySchedule::create($request->all());
