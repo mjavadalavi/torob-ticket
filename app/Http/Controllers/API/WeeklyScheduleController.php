@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Classes\ProjectResource;
+use App\Enums\Status;
+use App\Enums\StatusCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ListWeeklyScheduleRequest;
 use App\Http\Requests\StoreWeeklyScheduleRequest;
 use App\Models\WeeklySchedule;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class WeeklyScheduleController extends Controller
@@ -32,9 +33,8 @@ class WeeklyScheduleController extends Controller
      */
     public function index(ListWeeklyScheduleRequest $request)
     {
-        $validate = $request->validated();
         $data = null;
-        if($validate){
+        if($request->validated()){
             switch ($request->input("actions")){
                 case "terminals":
                     $data = WeeklySchedule::groupBy("source_city_id")->get();
@@ -47,15 +47,19 @@ class WeeklyScheduleController extends Controller
                     break;
             }
             if ($data == null)
-                return response("null", 404)->header('Content-Type', 'application/json');
+                return response()
+                    ->json(['status' => Status::Failed , "code" => StatusCode::Failed])
+                    ->header('Content-Type', 'application/json');
             else
-                return response()->json($data)->header('Content-Type', 'application/json');
+                return (new ProjectResource($data))
+                        ->response()
+                        ->header('Content-Type', 'application/json');
         }
     }
 
     /**
      * @OA\Post(
-     *      path="/projects",
+     *      path="/weekly-schedule",
      *      operationId="storeweeklyschedule",
      *      tags={"WeeklySchedule"},
      *      summary="Store new WeeklySchedule",
@@ -77,34 +81,18 @@ class WeeklyScheduleController extends Controller
      */
     public function store(StoreWeeklyScheduleRequest $request)
     {
-        $project = WeeklySchedule::create($request->all());
+        if ($request->validated()) {
+            $weekly_schedule = WeeklySchedule::create($request->all());
 
-        return (new ProjectResource($project))
-            ->response()
-            ->setStatusCode(Response::HTTP_CREATED);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            return (new ProjectResource($weekly_schedule))
+                ->response()
+                ->setStatusCode(Response::HTTP_CREATED)
+                ->header('Content-Type', 'application/json');
+        }else{
+            return response()
+                ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                ->header('Content-Type', 'application/json');
+        }
     }
 }
