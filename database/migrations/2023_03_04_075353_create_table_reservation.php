@@ -15,6 +15,7 @@ return new class extends Migration
         Schema::create('reservation', function (Blueprint $table) {
             $table->id();
             $table->integer('ws_id', false, true);
+            $table->integer('chair_id', false, true);
             $table->integer('passenger_count', false, true);
             $table->json('chairs');
             $table->tinyInteger('status')->default(ReservationStatus::Pending->value);
@@ -22,6 +23,11 @@ return new class extends Migration
             $table->foreign('ws_id')
                 ->references('id')
                 ->on('weekly_schedule')
+                ->cascadeOnDelete()
+                ->cascadeOnDelete();
+            $table->foreign('chair_id')
+                ->references('id')
+                ->on('chairs')
                 ->cascadeOnDelete()
                 ->cascadeOnDelete();
             $table->softDeletes();

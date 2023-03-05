@@ -39,7 +39,7 @@ class WeeklySchedule extends Model
      */
     public function chairs(): HasMany
     {
-        return $this->hasMany(Chairs::class);
+        return $this->hasMany(Chairs::class)->select(['id', 'chairs']);
     }
 
     /**
