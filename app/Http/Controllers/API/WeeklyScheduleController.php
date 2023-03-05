@@ -37,13 +37,35 @@ class WeeklyScheduleController extends Controller
         if($request->validated()){
             switch ($request->input("actions")){
                 case "terminals":
-                    $data = WeeklySchedule::groupBy("source_city_id")->get();
+                    $data = WeeklySchedule::groupBy("source_city_id")->get("source_city_id");
                     break;
                 case "destination":
-                    $data = WeeklySchedule::groupBy("destination_city_id")->get();
+                    $validated = $request->validate([
+                        'destination' => 'required|string|max:5',
+                    ],[
+                        'destination.required' => 'destination must be required and lower than 5 char.'
+                    ]);
+                    if ($validated)
+                        $data = WeeklySchedule::where("destination_city_id", "=", $request->input("destination"))->get("source_city_id");
+                    else
+                        return response()
+                            ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+                            ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                            ->header('Content-Type', 'application/json');
                     break;
                 case "source":
-                    $data = WeeklySchedule::groupBy("source_terminal_id")->get();
+                    $validated = $request->validate([
+                        'destination' => 'required|string|max:5',
+                    ],[
+                        'destination.required' => 'destination must be required and lower than 5 char.'
+                    ]);
+                    if ($validated)
+                        $data = WeeklySchedule::where("source_terminal_id","=",$request->input("source"))->get("source_city_id", "source_terminal_id");
+                    else
+                        return response()
+                            ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+                            ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                            ->header('Content-Type', 'application/json');
                     break;
             }
             if ($data == null)
@@ -54,6 +76,11 @@ class WeeklyScheduleController extends Controller
                 return (new ProjectResource($data))
                         ->response()
                         ->header('Content-Type', 'application/json');
+        }else{
+            return response()
+                ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed])
+                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                ->header('Content-Type', 'application/json');
         }
     }
 
