@@ -11,7 +11,7 @@ class WeeklySchedule extends Model
     use HasFactory;
 
     protected $casts=[
-        'price'=> 'int64'
+        'price'=> 'int'
     ];
 
     protected $table = 'weekly_schedule';
