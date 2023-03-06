@@ -203,9 +203,8 @@ class BuyController extends Controller
                 $reserve->status = ReservationStatus::Cancel;
                 $reserve->save();
 
-                $chair = $reserve->chairs();
-                $chair->chairs[] = $reserve->chairs;
-                $chair->save();
+                $reserve->chairs()->chairs[] = $reserve->chairs;
+                $reserve->chairs()->save();
 
                 $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=>"ticket successfully extradited."];
                 $response_code = Response::HTTP_OK;

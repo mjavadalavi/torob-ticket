@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BusType;
 use Illuminate\Database\Seeder;
 use App\Models\WeeklySchedule;
 
@@ -21,7 +22,7 @@ class WeeklyScheduleSeeder extends Seeder
         $WeeklySchedule->moving_time_seconds= 28800;
         $WeeklySchedule->traveling_time= 240;
         $WeeklySchedule->capacity= 26;
-        $WeeklySchedule->bus_type= 1;
+        $WeeklySchedule->bus_type= BusType::VIP;
         $WeeklySchedule->price= 200000;
         $WeeklySchedule->save();
 
@@ -34,7 +35,7 @@ class WeeklyScheduleSeeder extends Seeder
         $WeeklySchedule1->moving_time_seconds= 38800;
         $WeeklySchedule1->traveling_time= 260;
         $WeeklySchedule1->capacity= 26;
-        $WeeklySchedule1->bus_type= 1;
+        $WeeklySchedule1->bus_type= BusType::VIP;
         $WeeklySchedule1->price= 300000;
         $WeeklySchedule1->save();
 
@@ -47,7 +48,7 @@ class WeeklyScheduleSeeder extends Seeder
         $WeeklySchedule2->moving_time_seconds= 29800;
         $WeeklySchedule2->traveling_time= 240;
         $WeeklySchedule2->capacity= 26;
-        $WeeklySchedule2->bus_type= 1;
+        $WeeklySchedule2->bus_type= BusType::VIP;
         $WeeklySchedule2->price= 205000;
         $WeeklySchedule2->save();
     }

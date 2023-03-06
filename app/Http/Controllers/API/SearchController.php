@@ -39,6 +39,7 @@ class SearchController extends Controller
      *          description="city destination short-code with max 5 char",
      *          in="path",
      *          name="destination",
+     *          required=true,
      *          @OA\Schema(type="string"),
      *
      *      ),
@@ -46,6 +47,7 @@ class SearchController extends Controller
      *          description="source city short-code with max 5 char",
      *          in="path",
      *          name="source",
+     *          required=true,
      *          @OA\Schema(type="string"),
      *      ),
      *      @OA\Response(
@@ -71,26 +73,28 @@ class SearchController extends Controller
             $max_date = Carbon::now()->addWeeks(SettingsSystem::Max_Week);
             $user_date = Carbon::parse($request->input("datetime"));
             if (!$user_date->gt($max_date)) {
+                $weeks = [];
 
-                $weekly_schedule_city = WeeklySchedule::with("chairs")
-                    ->where("source_city_id", $source)
-                    ->where("destination_city_id", $destination)
-                    ->whereDate("date", "=",$user_date)
-                    ->get(["weekly_schedule.*", "chairs.id", "chairs.chairs"]);
-
-                $weekly_schedule_terminal = WeeklySchedule::with("chairs")
-                    ->where("source_terminal_id", $source)
-                    ->where("destination_terminal_id", $destination)
-                    ->whereDate("date", "=",$user_date)
-                    ->get(["weekly_schedule.*", "chairs.id", "chairs.chairs"]);
-
-                $data = array_unique($weekly_schedule_city->merge($weekly_schedule_terminal));
-                if(count($data)>0){
-                    $search_data = null;
-                    foreach ($data as $item){
-                        $search_data[] = ["search_code" => Encoding::base64url_encode($item["weekly_schedule.id"]."|".$item["chairs.id"]), "item" => $item];
+                $weekly_schedule_city = WeeklySchedule::where("source_city_id", $source)
+                    ->where("destination_city_id", $destination)->get();
+                foreach ($weekly_schedule_city as $week){
+                    $data = $week->chairs()->whereDate("date", "=",$user_date->toDateString())->first();
+                    if ($data){
+                        $weeks[] = ["search_code" => Encoding::base64url_encode($week->id."|".$data->id), "item" => $week];
                     }
-                    return  response()->json($search_data)
+                }
+
+                $weekly_schedule_terminal = WeeklySchedule::where("source_terminal_id", $source)
+                    ->where("destination_terminal_id", $destination)->get();
+                foreach ($weekly_schedule_terminal as $week){
+                    $data = $week->chairs()->whereDate("date", "=",$user_date->toDateString())->first();
+                    if ($data){
+                        $weeks[] = ["search_code" => Encoding::base64url_encode($week->id."|".$data->id), "item" => $week];
+                    }
+                }
+
+                if(count($weeks)>0){
+                    return  response()->json($weeks)
                         ->setStatusCode(Response::HTTP_OK)
                         ->header('Content-Type', 'application/json');
                 }else{

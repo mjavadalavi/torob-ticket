@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('bus_empty_chairs', function (Blueprint $table) {
             $table->id();
-            $table->integer('ws_id', false, true);
-            $table->json("chairs");
+            $table->integer('weekly_schedule_id', false, true);
+            $table->json("user_chairs");
             $table->timestamp("date");
             $table->timestamps();
-            $table->foreign('ws_id')
+            $table->foreign('weekly_schedule_id')
                 ->references('id')
                 ->on('weekly_schedule')
                 ->cascadeOnDelete()

@@ -19,7 +19,7 @@ class WeeklySchedule extends Model
     /**
      * Get the reservations for the weekly schedule.
      */
-    public function Reservations(): HasMany
+    public function reservations(): HasMany
     {
         return $this->hasMany(Reservation::class);
     }
@@ -29,6 +29,6 @@ class WeeklySchedule extends Model
      */
     public function chairs(): HasMany
     {
-        return $this->hasMany(Chairs::class)->select(['id', 'chairs']);
+        return $this->hasMany(Chairs::class);
     }
 }

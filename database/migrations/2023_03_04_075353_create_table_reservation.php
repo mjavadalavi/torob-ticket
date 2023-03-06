@@ -14,18 +14,18 @@ return new class extends Migration
     {
         Schema::create('reservation', function (Blueprint $table) {
             $table->id();
-            $table->integer('ws_id', false, true);
-            $table->integer('chair_id', false, true);
+            $table->integer('weekly_schedule_id', false, true);
+            $table->integer('bus_empty_chairs_id', false, true);
             $table->integer('passenger_count', false, true);
             $table->json('chairs');
             $table->tinyInteger('status')->default(ReservationStatus::Pending->value);
             $table->timestamps();
-            $table->foreign('ws_id')
+            $table->foreign('weekly_schedule_id')
                 ->references('id')
                 ->on('weekly_schedule')
                 ->cascadeOnDelete()
                 ->cascadeOnDelete();
-            $table->foreign('chair_id')
+            $table->foreign('bus_empty_chairs_id')
                 ->references('id')
                 ->on('chairs')
                 ->cascadeOnDelete()

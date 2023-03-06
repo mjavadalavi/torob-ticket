@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('buy', function (Blueprint $table) {
             $table->id();
-            $table->integer('reserve_id', false,true);
+            $table->integer('reservation_id', false,true);
             $table->bigInteger('passenger_id', false, true);
             $table->boolean('status')->default(false);
             $table->timestamps();
-            $table->foreign('reserve_id')
+            $table->foreign('reservation_id')
                 ->references('id')
                 ->on('reservation')
                 ->cascadeOnDelete()

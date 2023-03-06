@@ -22,6 +22,18 @@ class ReserveController extends Controller
      *      tags={"reserve"},
      *      summary="Store new Reserve",
      *      description="Returns json of result storing data",
+     *     @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 example={
+     *                      "search_hash":"s3w3rf",
+     *                      "passenger_count":"5",
+     *                      "chairs":"['0'=>1,'1'=>2,'2'=>3,'3'=>4]",
+     *                 }
+     *             )
+     *         )
+     *     ),
      *      @OA\Parameter(
      *           description="a hash id of searched by user",
      *           in="path",
@@ -38,7 +50,7 @@ class ReserveController extends Controller
      *
      *       ),
      *      @OA\Parameter(
-     *           description="an aaray of chairs user needed .",
+     *           description="an array of chairs user needed.",
      *           in="path",
      *           name="chairs",
      *           required=true,
@@ -57,7 +69,7 @@ class ReserveController extends Controller
      *                 @OA\Schema(
      *                     example={
      *                          "id":1,
-     *                          "ws_id":3,
+     *                          "weekly_schedule_id":3,
      *                          "chair_id": 2,
      *                          "passenger_count": 20,
      *                          "chairs": "[1,2,3,4]",
@@ -92,14 +104,16 @@ class ReserveController extends Controller
 
             $search_id = explode('|',Encoding::base64url_decode($request->input("search_hash")));
             $passenger_count = $request->input("passenger_count");
-            $chairs = $request->input("chairs");
+            $user_chairs = $request->input("chairs");
 
             $reserve = new Reservation();
-            $reserve->ws_id = $search_id[0];
-            $reserve->chair_id = $search_id[1];
+            $reserve->weekly_schedule_id = $search_id[0];
+            $reserve->bus_empty_chairs_id = $search_id[1];
             $reserve->passenger_count = $passenger_count;
-            $reserve->chairs = $chairs;
+            $reserve->user_chairs = $user_chairs;
+            $reserve->status = ReservationStatus::Pending;
             $reserve->save();
+
             return response()->json(['status' => Status::Success , "code" => StatusCode::Success, "data"=> $reserve])
                 ->setStatusCode(Response::HTTP_ACCEPTED)
                 ->header('Content-Type', 'application/json');
@@ -183,9 +197,8 @@ class ReserveController extends Controller
                 $reserve->status = ReservationStatus::Cancel;
                 $reserve->save();
 
-                $chair = $reserve->chairs();
-                $chair->chairs[] = $reserve->chairs;
-                $chair->save();
+                $reserve->chairs()->chairs[] = $reserve->user_chairs;
+                $reserve->chairs()->save();
 
                 $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=> "your reservations successfully cancelled"];
                 $response_code = Response::HTTP_OK;

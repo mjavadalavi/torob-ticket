@@ -31,7 +31,7 @@ class Reservation extends Model
         return $this->hasOne(Buy::class);
     }
 
-    public function chairs(): BelongsTo
+    public function Chairs(): BelongsTo
     {
         return $this->belongsTo(Chairs::class);
     }
