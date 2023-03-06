@@ -19,7 +19,7 @@ class ReserveController extends Controller
      * @OA\Post(
      *      path="/reserve",
      *      operationId="storeReserveRequest",
-     *      tags={"Reserve"},
+     *      tags={"reserve"},
      *      summary="Store new Reserve",
      *      description="Returns json of result storing data",
      *      @OA\Parameter(
@@ -77,7 +77,7 @@ class ReserveController extends Controller
      *                     example={
      *                          "status":"HTTP Bad Request",
      *                          "code":"400",
-     *                          "data":null
+     *                          "data":"your request don't have some parameter."
      *                     }
      *                 )
      *             )
@@ -104,7 +104,7 @@ class ReserveController extends Controller
                 ->setStatusCode(Response::HTTP_ACCEPTED)
                 ->header('Content-Type', 'application/json');
         }else{
-            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> "your request don't have some parameter."])
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->header('Content-Type', 'application/json');
         }
@@ -114,7 +114,7 @@ class ReserveController extends Controller
      * @OA\Post(
      *      path="/Cancellation",
      *      operationId="CancelReserveRequest",
-     *      tags={"Reserve"},
+     *      tags={"reserve"},
      *      summary="Cancel a Reserve",
      *      description="Returns json of result cancelling.",
      *      @OA\Parameter(
@@ -150,7 +150,7 @@ class ReserveController extends Controller
      *                     example={
      *                          "status":"Failed",
      *                          "code":"-1",
-     *                          "data":null
+     *                          "data":"ticket with this id not found"
      *                     }
      *                 )
      *             )
@@ -166,7 +166,7 @@ class ReserveController extends Controller
      *                     example={
      *                          "status":"HTTP Bad Request",
      *                          "code":"400",
-     *                          "data":null
+     *                          "data": "your request don't have some parameter."
      *                     }
      *                 )
      *             )
@@ -179,17 +179,23 @@ class ReserveController extends Controller
         if ($request->validated()){
             $reserve = Reservation::find($request->input("reserve_id"));
             if (count($reserve) > 0){
+
                 $reserve->status = ReservationStatus::Cancel;
-                $reserve->chairs()->chairs[] = $request->chairs;
                 $reserve->save();
+
+                $chair = $reserve->chairs();
+                $chair->chairs[] = $reserve->chairs;
+                $chair->save();
+
                 $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=> "your reservations successfully cancelled"];
                 $response_code = Response::HTTP_OK;
+
             }else{
-                $response = ['status' => Status::Failed , "code" => StatusCode::Failed, "data"=>null];
+                $response = ['status' => Status::Failed , "code" => StatusCode::Failed, "data"=>"ticket with this id not found"];
                 $response_code = Response::HTTP_NOT_FOUND;
             }
         }else{
-            $response = ['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed, "data"=> null];
+            $response = ['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed, "data"=> "your request don't have some parameter."];
             $response_code = Response::HTTP_BAD_REQUEST;
         }
         return  response() ->json($response)

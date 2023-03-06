@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Enums\BuyStatus;
+use App\Enums\ReservationStatus;
 use App\Enums\Status;
 use App\Enums\StatusCode;
 use App\Http\Controllers\Controller;
@@ -20,7 +21,7 @@ class BuyController extends Controller
      * @OA\Post(
      *      path="/StoreBuy",
      *      operationId="StoreBuyRequest",
-     *      tags={"Buy"},
+     *      tags={"buy"},
      *      summary="Store new Reserve",
      *      description="Returns json of result storing data",
      *      @OA\RequestBody(
@@ -43,7 +44,7 @@ class BuyController extends Controller
      *
      *       ),
      *      @OA\Parameter(
-     *           description="an aaray of chairs user needed .",
+     *           description="an array of chairs user needed .",
      *           in="path",
      *           name="chairs",
      *           required=true,
@@ -61,17 +62,14 @@ class BuyController extends Controller
      *                 mediaType="application/json",
      *                 @OA\Schema(
      *                     example={
-     *                          [
      *                              "ticket_id":1,
-     *                              "passenger":
-     *                               [
+     *                              "passenger":{
      *                                  "firstname":"mohammad",
      *                                  "lastname":"alaaasd",
      *                                  "national_code":"1180769036",
      *                                  "mobile":"09012356486",
-     *                               ],
+     *                               },
      *                              "message":"your ticket successfully bought"
-     *                          ]
      *                     }
      *                 )
      *             )
@@ -87,7 +85,7 @@ class BuyController extends Controller
      *                     example={
      *                          "status":"HTTP Bad Request",
      *                          "code":"400",
-     *                          "data":null
+     *                          "data":"your request don't have some parameter."
      *                     }
      *                 )
      *             )
@@ -122,7 +120,7 @@ class BuyController extends Controller
                 ->setStatusCode(Response::HTTP_OK)
                 ->header('Content-Type', 'application/json');
         }else{
-            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> "your request don't have some parameter."])
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->header('Content-Type', 'application/json');
         }
@@ -133,7 +131,7 @@ class BuyController extends Controller
      * @OA\Post(
      *      path="/ExtraditionBuy",
      *      operationId="ExtraditionBuyRequest",
-     *      tags={"Buy"},
+     *      tags={"buy"},
      *      summary="extradited a bougth",
      *      description="Returns json of result storing data",
      *      @OA\Parameter(
@@ -169,7 +167,7 @@ class BuyController extends Controller
      *                     example={
      *                          "status":"Failed",
      *                          "code":"-1",
-     *                          "data":null
+     *                          "data":"ticket with this id not found"
      *                     }
      *                 )
      *             )
@@ -185,7 +183,7 @@ class BuyController extends Controller
      *                     example={
      *                          "status":"HTTP Bad Request",
      *                          "code":"400",
-     *                          "data":null
+     *                          "data":"your request don't have some parameter."
      *                     }
      *                 )
      *             )
@@ -193,16 +191,36 @@ class BuyController extends Controller
      *      )
      * )
      */
-    public function extradition(ExtraditionBuyRequest $request)
+    public function extradition(ExtraditionBuyRequest $request): JsonResponse
     {
         if ($request->validated()){
-            $bought = new Buy();
+            $bought = Buy::find($request->input("ticket_id"))->get();
+            if (count($bought)>0){
+                $bought->status = BuyStatus::Extradition;
+                $bought->save();
 
+                $reserve = $bought->reserve();
+                $reserve->status = ReservationStatus::Cancel;
+                $reserve->save();
+
+                $chair = $reserve->chairs();
+                $chair->chairs[] = $reserve->chairs;
+                $chair->save();
+
+                $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=>"ticket successfully extradited."];
+                $response_code = Response::HTTP_OK;
+
+            }else{
+                $response = ['status' => Status::Failed , "code" => StatusCode::Failed, "data"=>"ticket with this id not found"];
+                $response_code = Response::HTTP_NOT_FOUND;
+            }
         }else{
-            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
-                ->setStatusCode(Response::HTTP_BAD_REQUEST)
-                ->header('Content-Type', 'application/json');
+            $response = ['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed, "data"=> "your request is have bad parameter."];
+            $response_code = Response::HTTP_BAD_REQUEST;
         }
+        return  response() ->json($response)
+            ->setStatusCode($response_code)
+            ->header('Content-Type', 'application/json');
     }
 
 

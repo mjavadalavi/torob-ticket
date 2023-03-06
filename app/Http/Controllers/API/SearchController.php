@@ -96,9 +96,9 @@ class SearchController extends Controller
 
     /**
      * @OA\Post(
-     *      path="/ExtraditionBuy",
-     *      operationId="ExtraditionBuyRequest",
-     *      tags={"Buy"},
+     *      path="/extraditionBuy",
+     *      operationId="extraditionBuyRequest",
+     *      tags={"search"},
      *      summary="extradited a bougth",
      *      description="Returns json of result storing data",
      *       @OA\Parameter(
@@ -143,38 +143,6 @@ class SearchController extends Controller
      *         }
      *       ),
      *      @OA\Response(
-     *          response=200,
-     *          description="Successful operation",
-     *          content={
-     *             @OA\MediaType(
-     *                 mediaType="application/json",
-     *                 @OA\Schema(
-     *                     example={
-     *                          "status":"Success",
-     *                          "code":"1",
-     *                          "data":"your bougth successfully extradited"
-     *                     }
-     *                 )
-     *             )
-     *         }
-     *       ),
-     *      @OA\Response(
-     *          response=201,
-     *          description="Successful operation",
-     *          content={
-     *             @OA\MediaType(
-     *                 mediaType="application/json",
-     *                 @OA\Schema(
-     *                     example={
-     *                          "status":"Success",
-     *                          "code":"1",
-     *                          "data":"your bougth successfully extradited"
-     *                     }
-     *                 )
-     *             )
-     *         }
-     *       ),
-     *      @OA\Response(
      *          response=404,
      *          description="Not Found",
      *          content={
@@ -184,7 +152,7 @@ class SearchController extends Controller
      *                     example={
      *                          "status":"Failed",
      *                          "code":"-1",
-     *                          "data":null
+     *                          "data": "empty response, not found."
      *                     }
      *                 )
      *             )
@@ -200,7 +168,7 @@ class SearchController extends Controller
      *                     example={
      *                          "status":"HTTP Bad Request",
      *                          "code":"400",
-     *                          "data":null
+     *                          "data":"your request don't have some parameter."
      *                     }
      *                 )
      *             )
@@ -234,7 +202,7 @@ class SearchController extends Controller
                                 ->header('Content-Type', 'application/json');
                         }
                     }else{
-                        return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+                        return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> "your request don't have some parameter."])
                             ->setStatusCode(Response::HTTP_BAD_REQUEST)
                             ->header('Content-Type', 'application/json');
                     }

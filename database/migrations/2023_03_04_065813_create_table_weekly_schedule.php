@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('weekly_schedule', function (Blueprint $table) {
             $table->id();
             $table->string("source_city_id", 5);
-            $table->string("source_terminal_id", 5);
             $table->string("destination_city_id", 5);
+            $table->string("source_terminal_id", 5);
             $table->string("destination_terminal_id", 5);
             $table->tinyInteger("moving_day_number");
             $table->integer("moving_time_seconds");

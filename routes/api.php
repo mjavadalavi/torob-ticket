@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\BuyController;
+use App\Http\Controllers\API\IndexController;
 use App\Http\Controllers\API\ReserveController;
 use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\WeeklyScheduleController;
@@ -18,9 +19,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('ticket')->group(function () {
-    Route::match(['get', 'post'], '/list/index', [WeeklyScheduleController::class, "index"])->name('index');
-    Route::post('/weekly-schedule', [WeeklyScheduleController::class, "store"])->name('store');
-
+    Route::match(['get', 'post'], '/list/index', [IndexController::class, "index"])->name('index');
     Route::match(['get', 'post'],'/searches', [SearchController::class,"index"])->name('searches');
 
     Route::post('/reserve', [ReserveController::class, 'store'])->name("reserve_store");
@@ -29,5 +28,5 @@ Route::prefix('ticket')->group(function () {
     Route::post('/buy', [BuyController::class, 'store'])->name("buy_store");
     Route::post('/extradition', [BuyController::class, 'extradition'])->name("extradition");
 
-    Route::post('/check', [BuyController::class, 'check'])->name("check");
+    Route::post('/check', [SearchController::class, 'check'])->name("check");
 });
