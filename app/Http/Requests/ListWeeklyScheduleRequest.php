@@ -12,7 +12,7 @@ class ListWeeklyScheduleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,14 +23,14 @@ class ListWeeklyScheduleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => 'required|unique:string|min:3|max:4',
+            'action' => 'required|string|min:3',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'action.required' => 'actions must be required by [source, destination or terminals].',
+            'action.required' => 'actions must be required by [source, destination or terminal].',
         ];
     }
 }
