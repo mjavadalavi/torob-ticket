@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\API;
 
 use App\Classes\Encoding;
+use App\Enums\BusType;
 use App\Enums\ReservationStatus;
 use App\Enums\Status;
 use App\Enums\StatusCode;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelReserveRequest;
 use App\Http\Requests\StoreReserveRequest;
+use App\Models\Chairs;
 use App\Models\Reservation;
+use App\Models\WeeklySchedule;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -80,6 +83,22 @@ class ReserveController extends Controller
      *         }
      *       ),
      *      @OA\Response(
+     *          response=404,
+     *          description="Not Found",
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"Failed",
+     *                          "code":"-1",
+     *                          "data":"ticket with this id not found"
+     *                     }
+     *                 )
+     *             )
+     *         }
+     *      ),
+     *      @OA\Response(
      *          response=400,
      *          description="Bad Request",
      *          content={
@@ -101,22 +120,33 @@ class ReserveController extends Controller
     public function store(StoreReserveRequest $request): JsonResponse
     {
         if ($request->validated()){
-
             $search_id = explode('|',Encoding::base64url_decode($request->input("search_hash")));
             $passenger_count = $request->input("passenger_count");
-            $user_chairs = $request->input("chairs");
+            $user_chairs = array_map('intval', $request->input("chairs"));
+            $week =  WeeklySchedule::find($search_id)->first();
+            $db_chair = Chairs::find($search_id[1])->first();
+            if ($week && $db_chair){
+                $reserve = new Reservation();
+                $reserve->weekly_schedule_id = $search_id[0];
+                $reserve->bus_empty_chairs_id = $search_id[1];
+                $reserve->passenger_count = $passenger_count;
+                $reserve->user_chairs = array_values($user_chairs);
+                $reserve->status = ReservationStatus::Pending;
+                $reserve->save();
 
-            $reserve = new Reservation();
-            $reserve->weekly_schedule_id = $search_id[0];
-            $reserve->bus_empty_chairs_id = $search_id[1];
-            $reserve->passenger_count = $passenger_count;
-            $reserve->user_chairs = $user_chairs;
-            $reserve->status = ReservationStatus::Pending;
-            $reserve->save();
+                // remove chairs from record
+                $db_chair->user_chairs = array_diff($db_chair->user_chairs, $user_chairs);
+                $db_chair->save();
 
-            return response()->json(['status' => Status::Success , "code" => StatusCode::Success, "data"=> $reserve])
-                ->setStatusCode(Response::HTTP_ACCEPTED)
-                ->header('Content-Type', 'application/json');
+                return response()->json(['status' => Status::Success , "code" => StatusCode::Success, "data"=> $reserve])
+                    ->setStatusCode(Response::HTTP_ACCEPTED)
+                    ->header('Content-Type', 'application/json');
+            }else{
+                return response()->json(['status' => Status::Failed , "code" => StatusCode::Failed, "data"=>"your hash code is not valid."])
+                    ->setStatusCode(Response::HTTP_NOT_FOUND)
+                    ->header('Content-Type', 'application/json');
+            }
+
         }else{
             return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> "your request don't have some parameter."])
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)

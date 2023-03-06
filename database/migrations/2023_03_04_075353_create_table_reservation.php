@@ -17,7 +17,7 @@ return new class extends Migration
             $table->integer('weekly_schedule_id', false, true);
             $table->integer('bus_empty_chairs_id', false, true);
             $table->integer('passenger_count', false, true);
-            $table->json('chairs');
+            $table->json('user_chairs');
             $table->tinyInteger('status')->default(ReservationStatus::Pending->value);
             $table->timestamps();
             $table->foreign('weekly_schedule_id')

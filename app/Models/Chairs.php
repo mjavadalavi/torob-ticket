@@ -13,7 +13,7 @@ class Chairs extends Model
 
     protected $table = 'bus_empty_chairs';
     protected $casts = [
-        'chairs' => "array",
+        'user_chairs' => "array",
     ];
 
     public function WeeklySchedule(): BelongsTo

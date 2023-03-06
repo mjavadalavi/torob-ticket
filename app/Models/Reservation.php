@@ -15,7 +15,7 @@ class Reservation extends Model
     protected $table = 'reservation';
 
     protected $casts = [
-        'chairs' => "array"
+        'user_chairs' => 'array'
     ];
 
     public function WeeklySchedule(): BelongsTo
@@ -31,9 +31,9 @@ class Reservation extends Model
         return $this->hasOne(Buy::class);
     }
 
-    public function Chairs(): BelongsTo
-    {
-        return $this->belongsTo(Chairs::class);
-    }
+//    public function Chairs(): BelongsTo
+//    {
+//        return $this->belongsTo(Chairs::class);
+//    }
 
 }
