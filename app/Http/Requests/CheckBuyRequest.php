@@ -23,7 +23,17 @@ class CheckBuyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'action' => 'required|integer',
+            'reserve_id' => 'int',
+            'search_hash' => 'string',
+            'ticket_id' => 'int'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'action.required' => 'a str action such as search, reserve, ticket of operations are required.',
         ];
     }
 }

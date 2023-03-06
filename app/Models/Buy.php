@@ -12,13 +12,12 @@ class Buy extends Model
 
     protected $table = 'buy';
 
-    protected $casts = [
-        'cancellation' => "boolean",
-        'passenger_ids' => 'array'
-    ];
-
-    public function Reserve(): BelongsTo
+    public function reserve(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);
+    }
+    public function passenger(): BelongsTo
+    {
+        return $this->belongsTo(Passenger::class);
     }
 }

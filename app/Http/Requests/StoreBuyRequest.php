@@ -23,7 +23,16 @@ class StoreBuyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'reserve_id' => 'required|integer|min:0',
+            'passengers' => 'required|array|min:3'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'reserve_id.required' => 'a integer of identity reserved values is required.',
+            'passengers.required' => 'an array of passengers.',
         ];
     }
 }

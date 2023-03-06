@@ -23,7 +23,14 @@ class ExtraditionBuyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'ticket_id' => 'required|int',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'ticket_id.required' => 'a integer of identity reserved values is required.',
         ];
     }
 }

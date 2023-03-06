@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('buy', function (Blueprint $table) {
             $table->id();
             $table->integer('reserve_id', false,true);
-            $table->json('passenger_ids');
-            $table->boolean('cancellation')->default(false);
+            $table->bigInteger('passenger_id', false, true);
+            $table->boolean('status')->default(false);
             $table->timestamps();
             $table->foreign('reserve_id')
                 ->references('id')
