@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
     {
 
         $this->call([
-            WeeklySchedule::class,
+            WeeklyScheduleSeeder::class,
         ]);
     }
 }
