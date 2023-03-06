@@ -28,6 +28,26 @@ class SearchController extends Controller
      *      tags={"search"},
      *      summary="Get list of travells ",
      *      description="Returns json list of weekly schedule",
+     *      @OA\Parameter(
+     *          description="date of bus",
+     *          in="path",
+     *          name="date",
+     *          required=true,
+     *          @OA\Schema(type="string"),
+     *      ),
+     *     @OA\Parameter(
+     *          description="city destination short-code with max 5 char",
+     *          in="path",
+     *          name="destination",
+     *          @OA\Schema(type="string"),
+     *
+     *      ),
+     *     @OA\Parameter(
+     *          description="source city short-code with max 5 char",
+     *          in="path",
+     *          name="source",
+     *          @OA\Schema(type="string"),
+     *      ),
      *      @OA\Response(
      *          response=200,
      *          description="OK",
