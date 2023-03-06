@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API;
 
 use App\Classes\Encoding;
-use App\Classes\ProjectResource;
 use App\Enums\ReservationStatus;
 use App\Enums\Status;
 use App\Enums\StatusCode;
@@ -23,10 +22,6 @@ class ReserveController extends Controller
      *      tags={"Reserve"},
      *      summary="Store new Reserve",
      *      description="Returns json of result storing data",
-     *      @OA\RequestBody(
-     *          required=true,
-     *          @OA\JsonContent(ref="App\Http\Requests\StoreReserveRequest")
-     *      ),
      *      @OA\Parameter(
      *           description="a hash id of searched by user",
      *           in="path",
@@ -91,11 +86,11 @@ class ReserveController extends Controller
      * )
      */
 
-    public function store(StoreReserveRequest $request)
+    public function store(StoreReserveRequest $request): JsonResponse
     {
         if ($request->validated()){
 
-            $search_id = explode('|',Encoding::base64url_decode($request->input("search_id")));
+            $search_id = explode('|',Encoding::base64url_decode($request->input("search_hash")));
             $passenger_count = $request->input("passenger_count");
             $chairs = $request->input("chairs");
 
@@ -108,7 +103,6 @@ class ReserveController extends Controller
             return response()->json(['status' => Status::Success , "code" => StatusCode::Success, "data"=> $reserve])
                 ->setStatusCode(Response::HTTP_ACCEPTED)
                 ->header('Content-Type', 'application/json');
-
         }else{
             return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
@@ -123,10 +117,6 @@ class ReserveController extends Controller
      *      tags={"Reserve"},
      *      summary="Cancel a Reserve",
      *      description="Returns json of result cancelling.",
-     *      @OA\RequestBody(
-     *          required=true,
-     *          @OA\JsonContent(ref="App\Http\Requests\CancelReserveRequest")
-     *      ),
      *      @OA\Parameter(
      *           description="an id of users reserved.",
      *           in="path",
@@ -144,7 +134,7 @@ class ReserveController extends Controller
      *                     example={
      *                          "status":"Success",
      *                          "code":"1",
-     *                          "data":true
+     *                          "data":"your reservations successfully cancelled"
      *                     }
      *                 )
      *             )
@@ -192,7 +182,7 @@ class ReserveController extends Controller
                 $reserve->status = ReservationStatus::Cancel;
                 $reserve->chairs()->chairs[] = $request->chairs;
                 $reserve->save();
-                $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=> true];
+                $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=> "your reservations successfully cancelled"];
                 $response_code = Response::HTTP_OK;
             }else{
                 $response = ['status' => Status::Failed , "code" => StatusCode::Failed, "data"=>null];
@@ -202,8 +192,7 @@ class ReserveController extends Controller
             $response = ['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed, "data"=> null];
             $response_code = Response::HTTP_BAD_REQUEST;
         }
-        return (new ProjectResource($response))
-            ->response()
+        return  response() ->json($response)
             ->setStatusCode($response_code)
             ->header('Content-Type', 'application/json');
     }

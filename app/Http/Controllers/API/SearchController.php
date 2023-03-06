@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\API;
 
 use App\Classes\Encoding;
-use App\Classes\ProjectResource;
+use App\Enums\BuyStatus;
+use App\Enums\ReservationStatus;
 use App\Enums\SettingsSystem;
 use App\Enums\Status;
 use App\Enums\StatusCode;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CheckBuyRequest;
 use App\Http\Requests\SearchWeeklyScheduleRequest;
+use App\Models\Buy;
+use App\Models\Chairs;
+use App\Models\Reservation;
 use App\Models\WeeklySchedule;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -26,23 +31,14 @@ class SearchController extends Controller
      *      @OA\Response(
      *          response=200,
      *          description="OK",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
      *      ),
      *      @OA\Response(
      *          response=404,
      *          description="Not Found",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
      *      ),
      *      @OA\Response(
      *          response=400,
      *          description="Http Bad Request",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
      *      )
      * )
      */
@@ -74,8 +70,7 @@ class SearchController extends Controller
                     foreach ($data as $item){
                         $search_data[] = ["search_code" => Encoding::base64url_encode($item["weekly_schedule.id"]."|".$item["chairs.id"]), "item" => $item];
                     }
-                    return (new ProjectResource($search_data))
-                        ->response()
+                    return  response()->json($search_data)
                         ->setStatusCode(Response::HTTP_OK)
                         ->header('Content-Type', 'application/json');
                 }else{
@@ -93,6 +88,234 @@ class SearchController extends Controller
         }else{
             return response()
                 ->json(['status' => Status::Failed , "code" => StatusCode::HTTP_BAD_REQUEST])
+                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                ->header('Content-Type', 'application/json');
+        }
+    }
+
+
+    /**
+     * @OA\Post(
+     *      path="/ExtraditionBuy",
+     *      operationId="ExtraditionBuyRequest",
+     *      tags={"Buy"},
+     *      summary="extradited a bougth",
+     *      description="Returns json of result storing data",
+     *       @OA\Parameter(
+     *          description="action of oprations each of ['search', 'reserve', 'ticket']",
+     *          in="path",
+     *          name="action",
+     *          required=true,
+     *          @OA\Schema(type="string"),
+     *      ),
+     *      @OA\Parameter(
+     *           description="a id of ticket bougth by user",
+     *           in="path",
+     *           name="ticket_id",
+     *           @OA\Schema(type="integer"),
+     *       ),
+     *      @OA\Parameter(
+     *           description="a id of reservation by user",
+     *           in="path",
+     *           name="reserve_id",
+     *           @OA\Schema(type="integer"),
+     *       ),
+     *      @OA\Parameter(
+     *           description="a hash of searchs by user",
+     *           in="path",
+     *           name="search_hash",
+     *           @OA\Schema(type="string"),
+     *       ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="checking",
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"Success",
+     *                          "code":"1",
+     *                          "data":"your bougth successfully extradited"
+     *                     }
+     *                 )
+     *             )
+     *         }
+     *       ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"Success",
+     *                          "code":"1",
+     *                          "data":"your bougth successfully extradited"
+     *                     }
+     *                 )
+     *             )
+     *         }
+     *       ),
+     *      @OA\Response(
+     *          response=201,
+     *          description="Successful operation",
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"Success",
+     *                          "code":"1",
+     *                          "data":"your bougth successfully extradited"
+     *                     }
+     *                 )
+     *             )
+     *         }
+     *       ),
+     *      @OA\Response(
+     *          response=404,
+     *          description="Not Found",
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"Failed",
+     *                          "code":"-1",
+     *                          "data":null
+     *                     }
+     *                 )
+     *             )
+     *         }
+     *      ),
+     *      @OA\Response(
+     *          response=400,
+     *          description="Bad Request",
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"HTTP Bad Request",
+     *                          "code":"400",
+     *                          "data":null
+     *                     }
+     *                 )
+     *             )
+     *         }
+     *      )
+     * )
+     */
+    public function check(CheckBuyRequest $request)
+    {
+        if ($request->validated()){
+            switch ($request->input('action')){
+                case "search":
+                    $validated = $request->validate([
+                        'search_hash' => 'required|string',
+                    ],[
+                        'search_hash.required' => 'destination must be required and lower than 5 char.'
+                    ]);
+                    if ($validated){
+                        $search_id = explode('|',Encoding::base64url_decode($request->input("search_hash")));
+                        $weekly_schedule = WeeklySchedule::find($search_id[0])->get();
+                        $chair = Chairs::find($search_id[1])->get();
+                        if (count($chair) > 0|| count($weekly_schedule) > 0){
+                            return response()
+                                ->json(['status' => Status::Success , "code" => StatusCode::Success, "result" => ["week" => $weekly_schedule,"chair" => $chair->chairs]])
+                                ->setStatusCode(Response::HTTP_OK)
+                                ->header('Content-Type', 'application/json');
+                        }else {
+                            return response()
+                                ->json(['status' => Status::UnSuccess, "code" => StatusCode::UnSuccess, "result" => "couldn't find search with your order."])
+                                ->setStatusCode(Response::HTTP_NOT_FOUND)
+                                ->header('Content-Type', 'application/json');
+                        }
+                    }else{
+                        return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+                            ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                            ->header('Content-Type', 'application/json');
+                    }
+                case "reserve":
+                    $validated = $request->validate([
+                        'reserve_id' => 'required|integer',
+                    ],[
+                        'reserve_id.required' => 'reserve_id must be integer and required.'
+                    ]);
+                    if ($validated){
+                        $reserve = Reservation::find($request->input("ticket_id"))->get();
+                        if (count($reserve) > 0){
+                            $status = "Success";
+                            switch($reserve->status){
+                                case ReservationStatus::Cancel:
+                                    $status = "Cancel";
+                                    break;
+                                case ReservationStatus::Pending:
+                                    $status = "Pending";
+                                    break;
+                                case ReservationStatus::Expired:
+                                    $status = "Expired";
+                                    break;
+                            }
+                            return response()
+                                ->json([
+                                    'status' => Status::Success,
+                                    "code" => StatusCode::Success,
+                                    "result" => [
+                                        "travel" => $reserve->WeeklySchedule,
+                                        "status"=> $status
+                                    ]
+                                ])
+                                ->setStatusCode(Response::HTTP_OK)
+                                ->header('Content-Type', 'application/json');
+                        }else {
+                            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+                                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                                ->header('Content-Type', 'application/json');
+                        }
+                    }else{
+                        return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+                            ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                            ->header('Content-Type', 'application/json');
+                    }
+                case "ticket":
+                    $validated = $request->validate([
+                        'reserve_id' => 'required|integer',
+                    ],[
+                        'reserve_id.required' => 'reserve_id must be integer and required.'
+                    ]);
+                    if ($validated){
+                        $ticket = Buy::find($request->input("ticket_id"))->get();
+                        if (count($ticket) > 0){
+                            $reserve = $ticket->reserve();
+                            return response()
+                                ->json([
+                                    'status' => Status::Success,
+                                    "code" => StatusCode::Success,
+                                    "result" => [
+                                        "ticket" => $ticket->id,
+                                        "passenger" => $ticket->passenger(),
+                                        "travel" => $reserve->WeeklySchedule,
+                                        "status"=> ($ticket->status == BuyStatus::Success? "Success":"Cancel")
+                                    ]
+                                ])
+                                ->setStatusCode(Response::HTTP_OK)
+                                ->header('Content-Type', 'application/json');
+                        }else {
+                            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+                                ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                                ->header('Content-Type', 'application/json');
+                        }
+                    }else{
+                        return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
+                            ->setStatusCode(Response::HTTP_BAD_REQUEST)
+                            ->header('Content-Type', 'application/json');
+                    }
+            }
+        }else{
+            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->header('Content-Type', 'application/json');
         }
