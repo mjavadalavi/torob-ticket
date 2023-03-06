@@ -312,7 +312,7 @@
                 }
             }
         },
-        "/Cancellation": {
+        "/cancellation": {
             "post": {
                 "tags": [
                     "reserve"
@@ -331,6 +331,17 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "example": {
+                                    "reserve_id": 5
+                                }
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "Successful operation",

@@ -25,7 +25,7 @@ class ReserveController extends Controller
      *      tags={"reserve"},
      *      summary="Store new Reserve",
      *      description="Returns json of result storing data",
-     *     @OA\RequestBody(
+     *      @OA\RequestBody(
      *         @OA\MediaType(
      *             mediaType="application/json",
      *             @OA\Schema(
@@ -36,7 +36,7 @@ class ReserveController extends Controller
      *                 }
      *             )
      *         )
-     *     ),
+     *      ),
      *      @OA\Parameter(
      *           description="a hash id of searched by user",
      *           in="path",
@@ -156,11 +156,21 @@ class ReserveController extends Controller
 
     /**
      * @OA\Post(
-     *      path="/Cancellation",
+     *      path="/cancellation",
      *      operationId="CancelReserveRequest",
      *      tags={"reserve"},
      *      summary="Cancel a Reserve",
      *      description="Returns json of result cancelling.",
+     *      @OA\RequestBody(
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 example={
+     *                      "reserve_id":5
+     *                 }
+     *             )
+     *         )
+     *      ),
      *      @OA\Parameter(
      *           description="an id of users reserved.",
      *           in="path",
@@ -222,13 +232,14 @@ class ReserveController extends Controller
     {
         if ($request->validated()){
             $reserve = Reservation::find($request->input("reserve_id"));
-            if (count($reserve) > 0){
+            if ($reserve){
 
                 $reserve->status = ReservationStatus::Cancel;
                 $reserve->save();
 
-                $reserve->chairs()->chairs[] = $reserve->user_chairs;
-                $reserve->chairs()->save();
+                $chair = Chairs::find($reserve->user_chairs)->first();
+                $chair->user_chairs[] = $reserve->user_chairs;
+                $chair->save();
 
                 $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=> "your reservations successfully cancelled"];
                 $response_code = Response::HTTP_OK;
