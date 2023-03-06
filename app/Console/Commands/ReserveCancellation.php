@@ -30,14 +30,13 @@ class ReserveCancellation extends Command
     {
         $reservations = Reservation::where("status", "=", ReservationStatus::Pending->value)
             ->whereDate('created_at', '=>', Carbon::now()->subMinutes(15)->toDateTimeString());
+
         foreach ($reservations as $item){
             if (count($item->buy())){
-                $item->cancellation = false;
-                $item->save();
-            }else{
-                $item->status = ReservationStatus::Success;
-                $item->save();
+                $item->status = ReservationStatus::Expired;
+                $item->chairs()->chairs[] = $item->chairs;
             }
+            $item->save();
         }
     }
 }

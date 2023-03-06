@@ -36,3 +36,4 @@ return new class extends Migration
         Schema::dropIfExists('table__weekly_schedule');
     }
 };
+

@@ -4,6 +4,6 @@ namespace App\Enums;
 
 enum BusType
 {
-    const VIP = "VIP";
+    const VIP = "1";
     const VIP_Chair = array(1,26);
 }

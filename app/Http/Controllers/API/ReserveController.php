@@ -20,26 +20,73 @@ class ReserveController extends Controller
      * @OA\Post(
      *      path="/reserve",
      *      operationId="storeReserveRequest",
-     *      tags={"StoreReserve"},
+     *      tags={"Reserve"},
      *      summary="Store new Reserve",
      *      description="Returns json of result storing data",
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(ref="App\Http\Requests\StoreReserveRequest")
      *      ),
+     *      @OA\Parameter(
+     *           description="a hash id of searched by user",
+     *           in="path",
+     *           name="search_hash",
+     *           required=true,
+     *           @OA\Schema(type="string"),
+     *       ),
+     *      @OA\Parameter(
+     *           description="count of passengers",
+     *           in="path",
+     *           name="passenger_count",
+     *           required=true,
+     *           @OA\Schema(type="string"),
+     *
+     *       ),
+     *      @OA\Parameter(
+     *           description="an aaray of chairs user needed .",
+     *           in="path",
+     *           name="chairs",
+     *           required=true,
+     *           @OA\Schema(type="string"),
+     *           @OA\Items(
+     *               type="array",
+     *               @OA\Items()
+     *           ),
+     *       ),
      *      @OA\Response(
      *          response=201,
      *          description="Successful operation",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "id":1,
+     *                          "ws_id":3,
+     *                          "chair_id": 2,
+     *                          "passenger_count": 20,
+     *                          "chairs": "[1,2,3,4]",
+     *                          "status":1
+     *                     }
+     *                 )
+     *             )
+     *         }
      *       ),
      *      @OA\Response(
      *          response=400,
      *          description="Bad Request",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"HTTP Bad Request",
+     *                          "code":"400",
+     *                          "data":null
+     *                     }
+     *                 )
+     *             )
+     *         }
      *      )
      * )
      */
@@ -58,14 +105,12 @@ class ReserveController extends Controller
             $reserve->passenger_count = $passenger_count;
             $reserve->chairs = $chairs;
             $reserve->save();
-            return (new ProjectResource(['status' => Status::Success , "code" => StatusCode::Success]))
-                ->response()
+            return response()->json(['status' => Status::Success , "code" => StatusCode::Success, "data"=> $reserve])
                 ->setStatusCode(Response::HTTP_ACCEPTED)
                 ->header('Content-Type', 'application/json');
 
         }else{
-            return (new ProjectResource(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success]))
-                ->response()
+            return response() ->json(['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Success, "data"=> null])
                 ->setStatusCode(Response::HTTP_BAD_REQUEST)
                 ->header('Content-Type', 'application/json');
         }
@@ -75,33 +120,67 @@ class ReserveController extends Controller
      * @OA\Post(
      *      path="/Cancellation",
      *      operationId="CancelReserveRequest",
-     *      tags={"CancelReserve"},
+     *      tags={"Reserve"},
      *      summary="Cancel a Reserve",
      *      description="Returns json of result cancelling.",
      *      @OA\RequestBody(
      *          required=true,
      *          @OA\JsonContent(ref="App\Http\Requests\CancelReserveRequest")
      *      ),
+     *      @OA\Parameter(
+     *           description="an id of users reserved.",
+     *           in="path",
+     *           name="reserve_id",
+     *           required=true,
+     *           @OA\Schema(type="integer"),
+     *       ),
      *      @OA\Response(
      *          response=201,
      *          description="Successful operation",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"Success",
+     *                          "code":"1",
+     *                          "data":true
+     *                     }
+     *                 )
+     *             )
+     *         }
      *       ),
      *      @OA\Response(
      *          response=404,
      *          description="Not Found",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"Failed",
+     *                          "code":"-1",
+     *                          "data":null
+     *                     }
+     *                 )
+     *             )
+     *         }
      *      ),
      *      @OA\Response(
      *          response=400,
      *          description="Bad Request",
-     *          @OA\JsonContent(
-     *              @OA\Schema(ref="App\Classes\ProjectResource")
-     *          )
+     *          content={
+     *             @OA\MediaType(
+     *                 mediaType="application/json",
+     *                 @OA\Schema(
+     *                     example={
+     *                          "status":"HTTP Bad Request",
+     *                          "code":"400",
+     *                          "data":null
+     *                     }
+     *                 )
+     *             )
+     *         }
      *      )
      * )
      */
@@ -113,14 +192,14 @@ class ReserveController extends Controller
                 $reserve->status = ReservationStatus::Cancel;
                 $reserve->chairs()->chairs[] = $request->chairs;
                 $reserve->save();
-                $response = ['status' => Status::Success , "code" => StatusCode::Success];
+                $response = ['status' => Status::Success , "code" => StatusCode::Success, "data"=> true];
                 $response_code = Response::HTTP_OK;
             }else{
-                $response = ['status' => Status::Failed , "code" => StatusCode::Failed];
+                $response = ['status' => Status::Failed , "code" => StatusCode::Failed, "data"=>null];
                 $response_code = Response::HTTP_NOT_FOUND;
             }
         }else{
-            $response = ['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed];
+            $response = ['status' => Status::HTTP_BAD_REQUEST , "code" => StatusCode::Failed, "data"=> null];
             $response_code = Response::HTTP_BAD_REQUEST;
         }
         return (new ProjectResource($response))

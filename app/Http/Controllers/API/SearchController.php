@@ -20,7 +20,7 @@ class SearchController extends Controller
      * @OA\Get(
      *      path="/searches",
      *      operationId="searches",
-     *      tags={"source", "destination", "datetime"},
+     *      tags={"search"},
      *      summary="Get list of travells ",
      *      description="Returns json list of weekly schedule",
      *      @OA\Response(

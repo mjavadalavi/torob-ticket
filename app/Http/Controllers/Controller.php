@@ -34,7 +34,7 @@ use Illuminate\Routing\Controller as BaseController;
 
  *
  * @OA\Tag(
- *     name="Projects",
+ *     name="Ticket Sales",
  *     description="API Endpoints of Ticket Sales"
  * )
  */
