@@ -1,0 +1,1002 @@
+openapi: 3.1.0
+info:
+  title: Torob Ticket Travel Comparison API
+  version: 1.0.0
+  description: |
+    Provider-neutral comparison API for flights, trains, and buses. The API queries
+    registered OTA adapters, normalizes their offers into one shape, groups equal
+    journeys, and ranks them by the requested intent. Passenger data and checkout
+    are never collected here; the selected seller handles checkout after redirect.
+servers:
+  - url: http://localhost:8000
+    description: Local development
+security: []
+tags:
+  - name: operations
+    description: Service health and readiness
+  - name: travel
+    description: Search, compare, and redirect to travel sellers
+paths:
+  /health:
+    get:
+      tags: [operations]
+      operationId: healthCheck
+      summary: Check service health
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/v1/search:
+    post:
+      tags: [travel]
+      operationId: searchOffers
+      summary: Search and compare travel offers
+      description: |
+        Queries all adapters registered for the selected mode. A successful
+        response can contain partial results when one provider is unavailable;
+        inspect `provider_failures` before showing a completeness message.
+        For a round trip, adapters still receive independent one-way requests;
+        outbound fields retain their existing shape and `return_leg` contains
+        the independently ranked reverse journey.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+            examples:
+              flight:
+                $ref: '#/components/examples/FlightSearchRequest'
+              train:
+                $ref: '#/components/examples/TrainSearchRequest'
+              bus:
+                $ref: '#/components/examples/BusSearchRequest'
+      responses:
+        '200':
+          description: Grouped and ranked journeys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '422':
+          description: Invalid search request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '503':
+          description: No adapter could answer the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/nearby-dates:
+    post:
+      tags: [travel]
+      operationId: searchNearbyDates
+      summary: Check prices around a selected travel date
+      description: |
+        Queries live providers for the two previous dates, the selected date,
+        and the two following dates. `sold_out` means every queried provider
+        answered successfully and returned no bookable offer.
+        `availability_unknown` means at least one provider returned no offers
+        while another provider failed, so a market-wide sell-out cannot be
+        claimed. Provider failure is never represented as a fake zero price.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SearchRequest'}
+      responses:
+        '200':
+          description: Five-day provider-backed availability and minimum-price window
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/NearbyDatesResponse'}
+        '422':
+          description: Invalid search request
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ValidationErrorResponse'}
+  /api/v1/search-jobs:
+    post:
+      tags: [travel]
+      operationId: createSearchJob
+      summary: Start a background travel search
+      description: |
+        Validates the same provider-neutral request accepted by `POST /api/v1/search`,
+        creates a bounded background search, and returns immediately. Follow the
+        `Location` header (or build the same URL from `search_id`) and poll until the
+        status becomes `completed` or `failed`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+            examples:
+              flight:
+                $ref: '#/components/examples/FlightSearchRequest'
+              train:
+                $ref: '#/components/examples/TrainSearchRequest'
+              bus:
+                $ref: '#/components/examples/BusSearchRequest'
+      responses:
+        '202':
+          description: Search job accepted and queued
+          headers:
+            Location:
+              description: Absolute URL of the newly created search job.
+              required: true
+              schema: {type: string, format: uri}
+            Retry-After:
+              description: Suggested minimum polling delay in seconds.
+              required: true
+              schema: {type: integer, minimum: 1}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchJobAccepted'
+        '422':
+          description: Invalid search request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '503':
+          description: Background search admission is unavailable or the bounded queue is full
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/search-jobs/{search_id}:
+    get:
+      tags: [travel]
+      operationId: getSearchJob
+      summary: Get background search status
+      description: |
+        Returns `queued` or `running` while providers are being queried, the normalized
+        `SearchResponse` when completed, or sanitized failure metadata when failed.
+        A failed background search is a successfully retrieved job resource and therefore
+        still returns HTTP 200.
+      parameters:
+        - $ref: '#/components/parameters/SearchId'
+      responses:
+        '200':
+          description: Current persisted state of the background search
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchJobStatusResponse'
+        '404':
+          description: Search job not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Invalid search identifier length
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /api/v1/locations:
+    get:
+      tags: [travel]
+      operationId: searchLocations
+      summary: Search valid travel locations
+      description: Returns provider-confirmed locations for the selected travel mode; no guessed generic city list is returned.
+      parameters:
+        - name: mode
+          in: query
+          required: true
+          schema: {$ref: '#/components/schemas/TravelMode'}
+        - name: q
+          in: query
+          required: false
+          schema: {type: string, maxLength: 64, default: ''}
+        - name: limit
+          in: query
+          required: false
+          schema: {type: integer, minimum: 1, maximum: 20, default: 10}
+      responses:
+        '200':
+          description: Provider-confirmed location suggestions
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LocationSearchResponse'}
+        '422':
+          description: Invalid mode, query, or limit
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ValidationErrorResponse'}
+  /api/v1/providers:
+    get:
+      tags: [travel]
+      operationId: listProviderSupport
+      summary: List provider integration support
+      description: |
+        Returns the audited integration status for every requested OTA in one
+        travel mode. This reports integration eligibility, not current seller
+        uptime. Search responses report runtime failures in `provider_failures`.
+      parameters:
+        - name: mode
+          in: query
+          required: true
+          schema: {$ref: '#/components/schemas/TravelMode'}
+      responses:
+        '200':
+          description: Audited provider integration status for the selected mode
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ProviderSupportResponse'}
+        '422':
+          description: Invalid or missing travel mode
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ValidationErrorResponse'}
+  /api/v1/offers/{offer_id}:
+    get:
+      tags: [travel]
+      operationId: getOffer
+      summary: Get one grouped offer
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+      responses:
+        '200':
+          description: Journey and all currently known seller offers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferGroup'
+        '404':
+          description: Offer not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/offers/{offer_id}/redirect:
+    get:
+      tags: [travel]
+      operationId: previewOfferRedirect
+      summary: Resolve the external OTA URL for a seller offer
+      description: |
+        Returns a preview payload so the client can show a confirmation before
+        leaving Torob Ticket. This endpoint does not collect passenger details or
+        perform checkout. The URL is external and can expire with the fare.
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - name: seller_offer_id
+          in: query
+          required: true
+          description: Seller offer ID returned inside `seller_offers`.
+          schema:
+            type: string
+            minLength: 5
+            maxLength: 80
+      responses:
+        '200':
+          description: External redirect preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RedirectPreview'
+        '404':
+          description: Offer or seller offer not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: The seller adapter or its verified redirect is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/offers/{offer_id}/details:
+    get:
+      tags: [travel]
+      operationId: getOfferDetails
+      summary: Get provider-backed details for one seller offer
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - $ref: '#/components/parameters/SellerOfferId'
+      responses:
+        '200':
+          description: Current details supplied by the selected provider
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OfferDetails'}
+        '404':
+          description: Offer or seller offer not found or expired
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+        '503':
+          description: The provider cannot supply details for this offer
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+  /api/v1/offers/{offer_id}/refund-rules:
+    get:
+      tags: [travel]
+      operationId: getOfferRefundRules
+      summary: Get verified refund rules for one seller offer
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - $ref: '#/components/parameters/SellerOfferId'
+      responses:
+        '200':
+          description: Provider-backed refundability and rule summary
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RefundRules'}
+        '404':
+          description: Offer or seller offer not found or expired
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+        '503':
+          description: Refund rules are unsupported or unavailable
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+  /api/v1/offers/{offer_id}/seat-map:
+    get:
+      tags: [travel]
+      operationId: getOfferSeatMap
+      summary: Get the verified seat map for one seller offer
+      parameters:
+        - $ref: '#/components/parameters/OfferId'
+        - $ref: '#/components/parameters/SellerOfferId'
+      responses:
+        '200':
+          description: Provider-backed seat availability and price deltas
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SeatMap'}
+        '404':
+          description: Offer or seller offer not found or expired
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+        '503':
+          description: Seat selection is unsupported or unavailable
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ErrorResponse'}
+
+components:
+  parameters:
+    SearchId:
+      name: search_id
+      in: path
+      required: true
+      description: Stable background-search identifier returned by the create operation.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 80
+    OfferId:
+      name: offer_id
+      in: path
+      required: true
+      description: Stable grouped offer ID returned by a search.
+      schema:
+        type: string
+        minLength: 5
+        maxLength: 80
+    SellerOfferId:
+      name: seller_offer_id
+      in: query
+      required: true
+      description: Seller offer ID returned inside `seller_offers`.
+      schema:
+        type: string
+        minLength: 5
+        maxLength: 80
+  examples:
+    FlightSearchRequest:
+      summary: Tehran to Mashhad flight
+      value:
+        mode: flight
+        origin: THR
+        destination: MHD
+        departure_date: '2030-01-15'
+        passengers: {adults: 1, children: 0, infants: 0}
+        intent: best
+    TrainSearchRequest:
+      summary: Tehran to Mashhad train
+      value:
+        mode: train
+        origin: THR
+        destination: MHD
+        departure_date: '2030-01-15'
+        passengers: {adults: 2, children: 0, infants: 0}
+        intent: cheapest
+    BusSearchRequest:
+      summary: Tehran to Mashhad bus
+      value:
+        mode: bus
+        origin: THR
+        destination: MHD
+        departure_date: '2030-01-15'
+        passengers: {adults: 1, children: 0, infants: 0}
+        intent: fastest
+  schemas:
+    TravelMode:
+      type: string
+      enum: [flight, train, bus]
+      description: Transport mode. New modes are added through adapters without changing this response shape.
+    SearchIntent:
+      type: string
+      enum: [best, cheapest, fastest]
+      default: best
+    ProviderSupportStatus:
+      type: string
+      enum: [registered, upstream_unavailable, access_restricted, requires_human_verification, referral_only, unverified]
+      description: Integration eligibility, not the provider's current uptime.
+    ProviderSupportRecord:
+      type: object
+      additionalProperties: false
+      required: [provider_id, name_fa, mode, status, reason_fa, official_url, adapter_registered, verified_on]
+      properties:
+        provider_id: {type: string, minLength: 2, maxLength: 40}
+        name_fa: {type: string, minLength: 2, maxLength: 80}
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        status: {$ref: '#/components/schemas/ProviderSupportStatus'}
+        reason_fa: {type: string, minLength: 2, maxLength: 300}
+        official_url: {type: string, format: uri, minLength: 1, maxLength: 2083}
+        adapter_registered: {type: boolean}
+        verified_on: {type: string, format: date}
+    ProviderSupportResponse:
+      type: object
+      additionalProperties: false
+      required: [mode, providers]
+      properties:
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        providers:
+          type: array
+          items: {$ref: '#/components/schemas/ProviderSupportRecord'}
+    HealthResponse:
+      type: object
+      required: [status, environment]
+      properties:
+        status: {type: string, enum: [ok]}
+        environment: {type: string}
+      additionalProperties: false
+    PassengerCounts:
+      type: object
+      additionalProperties: false
+      properties:
+        adults: {type: integer, minimum: 1, maximum: 9, default: 1}
+        children: {type: integer, minimum: 0, maximum: 8, default: 0}
+        infants: {type: integer, minimum: 0, maximum: 8, default: 0}
+      description: Total passengers cannot exceed nine; infants cannot exceed adults.
+    GroundPassengerCounts:
+      type: object
+      additionalProperties: false
+      properties:
+        adults: {type: integer, minimum: 1, maximum: 9, default: 1}
+        children:
+          type: integer
+          const: 0
+          default: 0
+          description: Child pricing is not provider-verified for ground travel.
+        infants:
+          type: integer
+          const: 0
+          default: 0
+          description: Infant pricing is not provider-verified for ground travel.
+      description: Train and bus searches currently accept adult passengers only.
+    SearchRequest:
+      type: object
+      required: [mode, origin, destination, departure_date]
+      additionalProperties: false
+      description: |
+        Provider-neutral one-way or round-trip search request. When present,
+        `return_date` must be later than `departure_date`. `preferences.mode`
+        must match the top-level `mode`. Train and bus searches currently
+        accept adult passengers only.
+      properties:
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        origin:
+          type: string
+          minLength: 2
+          maxLength: 64
+          description: IATA airport code, railway station, city, or bus terminal identifier.
+          examples: [THR]
+        destination:
+          type: string
+          minLength: 2
+          maxLength: 64
+          examples: [MHD]
+        departure_date: {type: string, format: date}
+        return_date:
+          type: [string, 'null']
+          format: date
+          description: Optional return date; must be later than departure_date.
+        passengers: {$ref: '#/components/schemas/PassengerCounts'}
+        preferences:
+          anyOf:
+            - oneOf:
+                - {$ref: '#/components/schemas/FlightSearchPreferences'}
+                - {$ref: '#/components/schemas/TrainSearchPreferences'}
+                - {$ref: '#/components/schemas/BusSearchPreferences'}
+              discriminator:
+                propertyName: mode
+                mapping:
+                  flight: '#/components/schemas/FlightSearchPreferences'
+                  train: '#/components/schemas/TrainSearchPreferences'
+                  bus: '#/components/schemas/BusSearchPreferences'
+            - {type: 'null'}
+        intent: {$ref: '#/components/schemas/SearchIntent'}
+      oneOf:
+        - title: Flight search request
+          required: [mode]
+          properties:
+            mode: {const: flight}
+            passengers: {$ref: '#/components/schemas/PassengerCounts'}
+            preferences:
+              anyOf:
+                - {$ref: '#/components/schemas/FlightSearchPreferences'}
+                - {type: 'null'}
+        - title: Train search request
+          required: [mode]
+          properties:
+            mode: {const: train}
+            passengers: {$ref: '#/components/schemas/GroundPassengerCounts'}
+            preferences:
+              anyOf:
+                - {$ref: '#/components/schemas/TrainSearchPreferences'}
+                - {type: 'null'}
+        - title: Bus search request
+          required: [mode]
+          properties:
+            mode: {const: bus}
+            passengers: {$ref: '#/components/schemas/GroundPassengerCounts'}
+            preferences:
+              anyOf:
+                - {$ref: '#/components/schemas/BusSearchPreferences'}
+                - {type: 'null'}
+    FlightSearchPreferences:
+      type: object
+      required: [mode]
+      additionalProperties: false
+      properties:
+        mode: {const: flight}
+        nonstop_only: {type: boolean, default: false}
+        fare_type: {type: [string, 'null'], enum: [system, charter, null]}
+    TrainSearchPreferences:
+      type: object
+      required: [mode]
+      additionalProperties: false
+      properties:
+        mode: {const: train}
+        exclusive_compartment: {type: boolean, default: false}
+        passenger_type: {type: string, enum: [family, female, male], default: family}
+        vehicle_transport: {type: boolean, default: false}
+    BusSearchPreferences:
+      type: object
+      required: [mode]
+      additionalProperties: false
+      properties:
+        mode: {const: bus}
+        seat_selection_required: {type: boolean, default: false}
+    LocationKind:
+      type: string
+      enum: [airport, railway_station, bus_station]
+    TravelLocation:
+      type: object
+      required: [code, name, mode, kind, providers]
+      additionalProperties: false
+      description: |
+        A provider-confirmed location suggestion. Clients submit the neutral
+        Persian `name` in SearchRequest; `code` is provider metadata and must
+        not be shared between adapters as a route identifier.
+      properties:
+        code: {type: string, minLength: 1, maxLength: 32}
+        name: {type: string, minLength: 2, maxLength: 120}
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        kind: {$ref: '#/components/schemas/LocationKind'}
+        popular: {type: boolean, default: false}
+        providers:
+          type: array
+          minItems: 1
+          items: {type: string}
+    LocationProviderFailure:
+      type: object
+      required: [provider, message]
+      additionalProperties: false
+      properties:
+        provider: {type: string}
+        message: {type: string}
+    LocationSearchResponse:
+      type: object
+      required: [mode, query, total, providers_queried, providers_succeeded, locations]
+      additionalProperties: false
+      properties:
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        query: {type: string}
+        total: {type: integer, minimum: 0}
+        providers_queried: {type: integer, minimum: 0}
+        providers_succeeded: {type: integer, minimum: 0}
+        provider_failures:
+          type: array
+          items: {$ref: '#/components/schemas/LocationProviderFailure'}
+        locations:
+          type: array
+          items: {$ref: '#/components/schemas/TravelLocation'}
+    NearbyDateStatus:
+      type: string
+      enum: [available, sold_out, availability_unknown, provider_unavailable, past]
+    NearbyDateOption:
+      type: object
+      required: [date, offset_days, status]
+      additionalProperties: false
+      properties:
+        date: {type: string, format: date}
+        offset_days: {type: integer, minimum: -2, maximum: 2}
+        status: {$ref: '#/components/schemas/NearbyDateStatus'}
+        minimum_price:
+          anyOf:
+            - {$ref: '#/components/schemas/Money'}
+            - {type: 'null'}
+        offer_count: {type: integer, minimum: 0, default: 0}
+        providers_queried: {type: integer, minimum: 0, default: 0}
+        providers_succeeded: {type: integer, minimum: 0, default: 0}
+        provider_failures:
+          type: array
+          items: {$ref: '#/components/schemas/ProviderFailure'}
+    NearbyDatesResponse:
+      type: object
+      required: [mode, origin, destination, selected_date, dates]
+      additionalProperties: false
+      properties:
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        origin: {type: string}
+        destination: {type: string}
+        selected_date: {type: string, format: date}
+        dates:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items: {$ref: '#/components/schemas/NearbyDateOption'}
+    Money:
+      type: object
+      required: [amount]
+      additionalProperties: false
+      properties:
+        amount:
+          type: integer
+          minimum: 0
+          description: Whole Iranian tomans; no decimal values.
+        currency: {type: string, enum: [IRT], default: IRT}
+    Seller:
+      type: object
+      required: [id, name]
+      additionalProperties: false
+      properties:
+        id: {type: string, pattern: '^[a-z0-9_-]+$'}
+        name: {type: string, minLength: 1, maxLength: 80}
+        rating: {type: [number, 'null'], minimum: 0, maximum: 5}
+        review_count: {type: [integer, 'null'], minimum: 0}
+        logo_url: {type: [string, 'null'], format: uri}
+        logo_alt: {type: [string, 'null'], minLength: 1, maxLength: 120}
+        logo_fallback: {type: [string, 'null'], minLength: 1, maxLength: 4}
+    Capability:
+      type: string
+      enum: [refund_rules, seat_selection, vehicle_transport, installment_payment, torob_guarantee, torob_pay]
+      description: A verified optional feature exposed by the selected provider offer.
+    Capabilities:
+      type: array
+      uniqueItems: true
+      items: {$ref: '#/components/schemas/Capability'}
+    OfferAttributes:
+      type: object
+      required: [operator]
+      additionalProperties: false
+      properties:
+        operator: {type: string, minLength: 1, maxLength: 100}
+        operator_code: {type: [string, 'null'], minLength: 1, maxLength: 40}
+        operator_logo_url: {type: [string, 'null'], format: uri}
+        operator_logo_alt: {type: [string, 'null'], minLength: 1, maxLength: 140}
+        operator_logo_fallback: {type: [string, 'null'], minLength: 1, maxLength: 4}
+        service_number: {type: [string, 'null'], maxLength: 40}
+        vehicle_class: {type: [string, 'null'], maxLength: 80}
+        ticket_type: {type: [string, 'null'], maxLength: 40}
+        stops: {type: [integer, 'null'], minimum: 0, maximum: 20}
+        baggage_allowance_kg: {type: [integer, 'null'], minimum: 0, maximum: 200}
+    FlightDetails:
+      type: object
+      required: [mode, origin_airport_code, destination_airport_code, airline, flight_number, fare_type, cabin_class]
+      additionalProperties: false
+      properties:
+        mode: {type: string, const: flight}
+        origin_airport_code: {type: string, minLength: 3, maxLength: 4}
+        destination_airport_code: {type: string, minLength: 3, maxLength: 4}
+        airline: {type: string, minLength: 1, maxLength: 100}
+        flight_number: {type: string, minLength: 1, maxLength: 20}
+        fare_type: {type: string, enum: [system, charter]}
+        cabin_class: {type: string, minLength: 1, maxLength: 40}
+        baggage_allowance_kg: {type: [integer, 'null'], minimum: 0, maximum: 200}
+    TrainDetails:
+      type: object
+      required: [mode, railway_company, train_number, class_name]
+      additionalProperties: false
+      properties:
+        mode: {type: string, const: train}
+        railway_company: {type: string, minLength: 1, maxLength: 100}
+        train_number: {type: string, minLength: 1, maxLength: 20}
+        class_name: {type: string, minLength: 1, maxLength: 80}
+        compartment_capacity: {type: [integer, 'null'], minimum: 1, maximum: 12}
+        private_compartment_available: {type: [boolean, 'null']}
+        women_only_available: {type: [boolean, 'null']}
+        vehicle_transport_available: {type: [boolean, 'null']}
+    BusDetails:
+      type: object
+      required: [mode, origin_terminal, destination_terminal, company, bus_class]
+      additionalProperties: false
+      properties:
+        mode: {type: string, const: bus}
+        origin_terminal: {type: string, minLength: 1, maxLength: 120}
+        destination_terminal: {type: string, minLength: 1, maxLength: 120}
+        company: {type: string, minLength: 1, maxLength: 100}
+        service_number: {type: [string, 'null'], minLength: 1, maxLength: 40}
+        bus_class: {type: string, minLength: 1, maxLength: 80}
+        seat_selection_available: {type: [boolean, 'null']}
+        capacity: {type: [integer, 'null'], minimum: 1, maximum: 100}
+        cancellation_policy: {type: [string, 'null'], maxLength: 240}
+    TravelDetails:
+      oneOf:
+        - {$ref: '#/components/schemas/FlightDetails'}
+        - {$ref: '#/components/schemas/TrainDetails'}
+        - {$ref: '#/components/schemas/BusDetails'}
+      discriminator:
+        propertyName: mode
+        mapping:
+          flight: '#/components/schemas/FlightDetails'
+          train: '#/components/schemas/TrainDetails'
+          bus: '#/components/schemas/BusDetails'
+    NormalizedOffer:
+      type: object
+      required: [id, provider, mode, seller, origin, destination, departure_at, price, attributes, mode_details, capabilities, last_updated_at]
+      additionalProperties: false
+      properties:
+        id: {type: string}
+        provider: {type: string}
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        seller: {$ref: '#/components/schemas/Seller'}
+        origin: {type: string}
+        destination: {type: string}
+        departure_at: {type: string, format: date-time}
+        arrival_at: {type: [string, 'null'], format: date-time}
+        duration_minutes: {type: [integer, 'null'], exclusiveMinimum: 0}
+        price: {$ref: '#/components/schemas/Money'}
+        attributes: {$ref: '#/components/schemas/OfferAttributes'}
+        mode_details: {$ref: '#/components/schemas/TravelDetails'}
+        capabilities: {$ref: '#/components/schemas/Capabilities'}
+        remaining_seats: {type: [integer, 'null'], minimum: 0}
+        cancellation_summary: {type: [string, 'null']}
+        refundable: {type: [boolean, 'null']}
+        last_updated_at: {type: string, format: date-time}
+    OfferDetails:
+      type: object
+      required: [seller_offer_id, mode, attributes, mode_details, last_updated_at]
+      additionalProperties: false
+      properties:
+        seller_offer_id:
+          type: string
+          description: Public opaque seller-offer identifier; never an OTA source token.
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        attributes: {$ref: '#/components/schemas/OfferAttributes'}
+        mode_details: {$ref: '#/components/schemas/TravelDetails'}
+        capabilities: {$ref: '#/components/schemas/Capabilities'}
+        remaining_seats: {type: [integer, 'null'], minimum: 0}
+        cancellation_summary: {type: [string, 'null']}
+        refundable: {type: [boolean, 'null']}
+        last_updated_at: {type: string, format: date-time}
+    RefundRules:
+      type: object
+      required: [offer_id, refundable, summary]
+      additionalProperties: false
+      properties:
+        offer_id: {type: string}
+        refundable: {type: boolean}
+        summary: {type: string, minLength: 1, maxLength: 500}
+    Seat:
+      type: object
+      required: [number, available]
+      additionalProperties: false
+      properties:
+        number: {type: string, minLength: 1, maxLength: 12}
+        row: {type: [integer, 'null'], minimum: 1}
+        column: {type: [integer, 'null'], minimum: 1}
+        available: {type: boolean}
+        price_delta: {type: integer, minimum: 0, default: 0}
+    SeatMap:
+      type: object
+      required: [offer_id, seats]
+      additionalProperties: false
+      properties:
+        offer_id: {type: string}
+        seats:
+          type: array
+          items: {$ref: '#/components/schemas/Seat'}
+    OfferGroup:
+      type: object
+      required: [id, mode, passenger_count, origin, destination, departure_at, attributes, mode_details, available_capabilities, lowest_price, seller_count, seller_offers, recommended_seller_offer_id, recommended_price, recommended_capabilities]
+      additionalProperties: false
+      properties:
+        id: {type: string}
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        passenger_count: {type: integer, minimum: 1, maximum: 9}
+        origin: {type: string}
+        destination: {type: string}
+        departure_at: {type: string, format: date-time}
+        arrival_at: {type: [string, 'null'], format: date-time}
+        duration_minutes: {type: [integer, 'null'], exclusiveMinimum: 0}
+        attributes: {$ref: '#/components/schemas/OfferAttributes'}
+        mode_details: {$ref: '#/components/schemas/TravelDetails'}
+        available_capabilities: {$ref: '#/components/schemas/Capabilities'}
+        lowest_price: {$ref: '#/components/schemas/Money'}
+        seller_count: {type: integer, minimum: 1}
+        seller_offers:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/NormalizedOffer'}
+        recommended_seller_offer_id:
+          type: string
+          description: Public ID of the concrete seller offer selected by the active ranking policy.
+        recommended_price:
+          $ref: '#/components/schemas/Money'
+        recommended_capabilities:
+          $ref: '#/components/schemas/Capabilities'
+        rank: {type: [integer, 'null'], minimum: 1}
+        score: {type: [number, 'null'], minimum: 0, maximum: 100}
+        recommendation_reasons:
+          type: array
+          items:
+            type: string
+            enum: [low_price, lowest_price, short_travel_time, shortest_travel_time, direct, high_seller_trust, torob_guarantee, refund_rules]
+        recommendation_summary: {type: [string, 'null']}
+    ProviderFailure:
+      type: object
+      required: [provider, message]
+      additionalProperties: false
+      properties:
+        provider: {type: string}
+        message: {type: string}
+    SearchLegResponse:
+      type: object
+      required: [total, providers_queried, providers_succeeded, offers]
+      additionalProperties: false
+      description: Independently grouped and ranked results for one trip leg.
+      properties:
+        total: {type: integer, minimum: 0}
+        providers_queried: {type: integer, minimum: 0}
+        providers_succeeded: {type: integer, minimum: 0}
+        provider_failures:
+          type: array
+          items: {$ref: '#/components/schemas/ProviderFailure'}
+        offers:
+          type: array
+          items: {$ref: '#/components/schemas/OfferGroup'}
+    SearchResponse:
+      type: object
+      required: [search_id, mode, intent, total, providers_queried, providers_succeeded, offers]
+      additionalProperties: false
+      properties:
+        search_id: {type: string}
+        mode: {$ref: '#/components/schemas/TravelMode'}
+        intent: {$ref: '#/components/schemas/SearchIntent'}
+        total: {type: integer, minimum: 0}
+        providers_queried: {type: integer, minimum: 0}
+        providers_succeeded: {type: integer, minimum: 0}
+        provider_failures:
+          type: array
+          items: {$ref: '#/components/schemas/ProviderFailure'}
+        offers:
+          type: array
+          items: {$ref: '#/components/schemas/OfferGroup'}
+        return_leg:
+          anyOf:
+            - {$ref: '#/components/schemas/SearchLegResponse'}
+            - {type: 'null'}
+          description: Independently ranked reverse leg for round-trip searches.
+    SearchJobAccepted:
+      type: object
+      required: [search_id, status]
+      additionalProperties: false
+      properties:
+        search_id:
+          type: string
+          minLength: 8
+          maxLength: 80
+        status:
+          type: string
+          const: queued
+    SearchJobError:
+      type: object
+      required: [code, message, retryable]
+      additionalProperties: false
+      description: Sanitized failure metadata safe to expose to clients.
+      properties:
+        code:
+          type: string
+          minLength: 2
+          maxLength: 64
+          pattern: '^[a-z][a-z0-9_]*$'
+        message:
+          type: string
+          minLength: 1
+          maxLength: 160
+        retryable: {type: boolean}
+    SearchJobStatus:
+      type: string
+      enum: [queued, running, completed, failed]
+    SearchJobStatusResponse:
+      type: object
+      required: [search_id, status, result, error]
+      additionalProperties: false
+      description: |
+        Background-search state. Pending states contain neither payload; completed
+        contains only `result`; failed contains only sanitized `error`.
+      properties:
+        search_id:
+          type: string
+          minLength: 8
+          maxLength: 80
+        status: {$ref: '#/components/schemas/SearchJobStatus'}
+        result:
+          anyOf:
+            - {$ref: '#/components/schemas/SearchResponse'}
+            - {type: 'null'}
+        error:
+          anyOf:
+            - {$ref: '#/components/schemas/SearchJobError'}
+            - {type: 'null'}
+    RedirectPreview:
+      type: object
+      required: [offer_id, seller_offer_id, provider, seller_id, seller_name, url, target_kind, price_recheck_required]
+      additionalProperties: false
+      properties:
+        offer_id: {type: string}
+        seller_offer_id: {type: string}
+        provider: {type: string}
+        seller_id: {type: string}
+        seller_name: {type: string}
+        url: {type: string, format: uri, minLength: 1}
+        target_kind:
+          type: string
+          enum: [seller_search, offer_deep_link]
+          description: Whether the target identifies this exact offer or only opens the seller search page.
+        price_recheck_required:
+          type: boolean
+          description: True when the seller must confirm current price and availability after redirect.
+        is_external: {type: boolean, default: true}
+        notice_code: {type: string, enum: [external_checkout], default: external_checkout}
+    ErrorResponse:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          additionalProperties: false
+          properties:
+            code: {type: string}
+            message: {type: string}
+    ValidationErrorResponse:
+      type: object
+      description: FastAPI/Pydantic validation envelope. The detail array may contain field-level errors.
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            additionalProperties: true

@@ -1,0 +1,32 @@
+{
+  "result": {
+    "firstNextAvailableDate": null,
+    "firstNextAvailablePrice": null,
+    "routeAvailability": true,
+    "state": null,
+    "availableList": [
+      {
+        "proposalId": "ALIBABA_BUS_VERIFIED_OPAQUE_SAMPLE",
+        "companyName": "آرو (پایانه جنوب)",
+        "companyCode": "1100761_24",
+        "departureDate": "1405/06/28",
+        "departureTime": "20:30",
+        "departureDateTime": "2026-09-19T20:30:00",
+        "busType": "کلاسیک ویژه وارداتی",
+        "orginCityName": "تهران پایانه جنوب",
+        "destinationCityName": "مشهد",
+        "price": 11800000.0,
+        "availableSeats": 13,
+        "orginTerminal": "تهران پایانه جنوب",
+        "destinationTerminal": "پایانه امام رضا",
+        "originCityCode": "11320000",
+        "destinationCityCode": "31310000",
+        "isRefundable": true,
+        "isCharter": false,
+        "type": "Bus"
+      }
+    ]
+  },
+  "success": true,
+  "error": null
+}

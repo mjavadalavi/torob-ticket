@@ -1,0 +1,36 @@
+{
+  "result": {
+    "isCompleted": true,
+    "departing": [
+      {
+        "proposalId": "ALBBDOMFL_VERIFIED_SAMPLE",
+        "origin": "THR",
+        "destination": "MHD",
+        "airlineCode": "I3",
+        "airlineName": "آتا",
+        "flightNumber": "5617",
+        "leaveDateTime": "2026-09-19T20:50:00",
+        "arrivalDateTime": "2026-09-19T22:15:00",
+        "aircraft": "Boeing MD-80",
+        "priceAdult": 90000000,
+        "priceChild": 90000000,
+        "priceInfant": 20000000,
+        "class": "B",
+        "classType": "E",
+        "classTypeName": "اکونومی",
+        "isCharter": true,
+        "ticketType": "Charter",
+        "seat": 3,
+        "isRefundable": true,
+        "hasConnection": false,
+        "crcn": {
+          "از زمان صدور تا ۳ روز قبل از پرواز": "50%",
+          "از یک روز قبل از پرواز به بعد": "100%"
+        },
+        "maxAllowedBaggage": 20
+      }
+    ]
+  },
+  "success": true,
+  "error": null
+}

@@ -1,0 +1,14 @@
+.git
+.gitignore
+vendor
+node_modules
+frontend/node_modules
+frontend/.next
+backend/.venv
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.ruff_cache
+storage
+TicketSales.db
+*.log

@@ -1,0 +1,62 @@
+{
+  "solutions": [
+    {
+      "id": "eyJlbmMiOiJBMTI4R0NNIiwiYWxnIjoiZGlyIn0.verified-offer-token",
+      "originCity": "تهران",
+      "destinationCity": "مشهد",
+      "originTerminal": {
+        "id": "11321006",
+        "name": "پایانه جنوب"
+      },
+      "destinationTerminal": {
+        "id": "31310000",
+        "name": "مشهد"
+      },
+      "busDescription": "اتوبوس VIP-تخت شو-شارژر دار",
+      "capacity": 20,
+      "price": 13130000,
+      "finalPrice": 13130000,
+      "discount": "0",
+      "departureDate": "2026-09-23",
+      "departureTime": "21:00",
+      "company": {
+        "name": "پیک صبا تهران پایانه جنوب",
+        "logo": "_unknown.png",
+        "id": "1045"
+      },
+      "finalDestination": "",
+      "provider": "78147fba5fa4c6895022ca2f073f89b3",
+      "serviceCommission": 0,
+      "multiStop": false,
+      "busType": "VIP",
+      "serviceId": "",
+      "departureDatetime": "2026-09-23T21:00:00",
+      "arrivalDatetime": "2026-09-24T12:00:00",
+      "distance": 892,
+      "journeyDuration": 900,
+      "providerPerOrderLimit": 6
+    }
+  ],
+  "sessionID": "verified-session-token",
+  "companies": [
+    {
+      "name": "پیک صبا تهران پایانه جنوب",
+      "logo": "_unknown.png",
+      "id": "1045"
+    }
+  ],
+  "searchingTime": "2026-09-16T23:47:19.0649",
+  "terminals": {
+    "originTerminal": [
+      {
+        "id": "11321006",
+        "name": "جنوب"
+      }
+    ],
+    "destinationTerminal": []
+  },
+  "cities": {
+    "originCity": "تهران",
+    "destinationCity": "مشهد"
+  }
+}

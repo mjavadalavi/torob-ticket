@@ -1,0 +1,64 @@
+{
+  "solutions": {
+    "solutions": [
+      {
+        "id": "raja.verified-offer-token",
+        "supplierCode": "raja",
+        "trainCompany": "رجا",
+        "origin": "1",
+        "originName": "تهران",
+        "destination": "165",
+        "destinationName": "كرج",
+        "isAbroad": false,
+        "exclusible": false,
+        "departureDateTime": "2026-09-18T06:20:00",
+        "isCompartment": false,
+        "arrivalTime": "07:17",
+        "duration": 57,
+        "trainNumber": "460",
+        "wagonType": 1344,
+        "wagonName": "4ستاره سالني پرديس",
+        "wagonLevel": 1,
+        "pathCode": "73",
+        "seatsRemaining": 12,
+        "compartmentCapacity": 4,
+        "features": ["AIR_CONDITION"],
+        "pricing": {
+          "adult": {
+            "basePrice": 1367500,
+            "ticketPrice": 1367500,
+            "quantity": 2,
+            "total": 2735000
+          },
+          "totalPayablePrice": 2735000
+        },
+        "ticketType": "NORMAL",
+        "betweenWayRation": true,
+        "isPast": false,
+        "description": "",
+        "logoName": "raja.png",
+        "hasHotel": false,
+        "requiredServices": false,
+        "businessProvider": "raja",
+        "capacityStatus": "AVAILABLE",
+        "badges": [
+          {
+            "type": "TAG",
+            "title": "اتوبوسی ۴ردیفه",
+            "style": {"color": "default", "variant": "accent"},
+            "data": null,
+            "icon": ""
+          }
+        ]
+      }
+    ],
+    "traceId": "fixture-trace",
+    "currentDateTime": "2026-09-17T16:22:46",
+    "responseCode": 200,
+    "responseMessage": "ok",
+    "solutionsCount": 1,
+    "emptySolutions": 0,
+    "aggregatedCapacity": 12
+  },
+  "traceId": "fixture-trace"
+}

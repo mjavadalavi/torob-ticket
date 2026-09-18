@@ -1,0 +1,42 @@
+[
+  {
+    "id": 105,
+    "code": 1,
+    "nameFa": "تهران",
+    "isActive": true,
+    "provinceName": null,
+    "countryName": null,
+    "nameEn": "Tehran",
+    "isAbroad": false
+  },
+  {
+    "id": 117,
+    "code": 165,
+    "nameFa": "كرج",
+    "isActive": true,
+    "provinceName": null,
+    "countryName": null,
+    "nameEn": "Karaj",
+    "isAbroad": false
+  },
+  {
+    "id": 128,
+    "code": 191,
+    "nameFa": "مشهد",
+    "isActive": true,
+    "provinceName": null,
+    "countryName": null,
+    "nameEn": "Mashhad",
+    "isAbroad": false
+  },
+  {
+    "id": 999,
+    "code": 999,
+    "nameFa": "ایستگاه غیرفعال",
+    "isActive": false,
+    "provinceName": null,
+    "countryName": null,
+    "nameEn": "Inactive",
+    "isAbroad": false
+  }
+]

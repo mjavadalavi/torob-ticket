@@ -14,6 +14,10 @@ Homestead.yaml
 auth.json
 npm-debug.log
 yarn-error.log
+**/.venv/
+**/__pycache__/
+*.py[cod]
+*.tsbuildinfo
 /.fleet
 /.idea
 /.vscode

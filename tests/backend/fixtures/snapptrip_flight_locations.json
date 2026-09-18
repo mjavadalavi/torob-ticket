@@ -1,0 +1,36 @@
+[
+  {
+    "iataCode": "THR",
+    "cityName": "Tehran",
+    "cityFaName": "تهران",
+    "countryCode": "IR",
+    "countryName": "Iran",
+    "countryFaName": "ایران",
+    "airports": [
+      {
+        "iataCode": "THR",
+        "name": "Mehrabad Intl",
+        "faName": "فرودگاه بین‌المللی مهرآباد"
+      }
+    ],
+    "isSuggested": true,
+    "includeAllAirports": true
+  },
+  {
+    "iataCode": "MHD",
+    "cityName": "Mashhad",
+    "cityFaName": "مشهد",
+    "countryCode": "IR",
+    "countryName": "Iran",
+    "countryFaName": "ایران",
+    "airports": [
+      {
+        "iataCode": "MHD",
+        "name": "Mashhad Intl",
+        "faName": "فرودگاه بین‌المللی مشهد (فرودگاه شهید هاشمی‌نژاد)"
+      }
+    ],
+    "isSuggested": true,
+    "includeAllAirports": true
+  }
+]

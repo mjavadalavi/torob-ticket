@@ -1,0 +1,32 @@
+{
+  "endpoints": [
+    {
+      "code": "Tehran",
+      "name": "تهران",
+      "city": "تهران",
+      "cityEn": "Tehran",
+      "province": "تهران",
+      "childs": [
+        {
+          "code": "Tehran-South",
+          "name": "جنوب",
+          "city": "تهران",
+          "cityEn": "Tehran",
+          "province": "تهران",
+          "childs": [],
+          "isAbroad": false
+        }
+      ],
+      "isAbroad": false
+    },
+    {
+      "code": "Mehran",
+      "name": "مهران",
+      "city": "مهران",
+      "cityEn": "Mehran",
+      "province": "ایلام",
+      "childs": [],
+      "isAbroad": false
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "airfares": [
+    {
+      "id": "1580669736918075054-0",
+      "airlineCode": "NV",
+      "routes": [
+        {
+          "totalJourneyDuration": 90,
+          "totalConnectionsDuration": 0,
+          "originAirportCode": "THR",
+          "originAirportInfo": {
+            "airportCode": "THR",
+            "cityName": "Tehran",
+            "faCityName": "تهران",
+            "airportFaName": "فرودگاه بین‌المللی مهرآباد"
+          },
+          "destinationAirportCode": "MHD",
+          "destinationAirportInfo": {
+            "airportCode": "MHD",
+            "cityName": "Mashhad",
+            "faCityName": "مشهد",
+            "airportFaName": "فرودگاه بین‌المللی مشهد (فرودگاه شهید هاشمی‌نژاد)"
+          },
+          "segments": [
+            {
+              "departureDateTime": "2026-09-23T21:30:00",
+              "arrivalDateTime": "2026-09-23T23:00:00",
+              "flightNumber": "2638",
+              "journeyDuration": 90,
+              "departureAirportCode": "THR",
+              "arrivalAirportCode": "MHD",
+              "carrierAirlineCode": "NV",
+              "carrierAirlineInfo": {
+                "airlineCode": "NV",
+                "airlineName": "کارون (نفت)"
+              },
+              "cabinType": "ECONOMY",
+              "seatsRemaining": 9,
+              "baggage": "20",
+              "isReturn": false,
+              "isCharter": false,
+              "technicalStops": null,
+              "fareClass": "X"
+            }
+          ],
+          "baggageDetail": {
+            "providerText": "20",
+            "baggageInfoType": "WEIGHT",
+            "weight": 20,
+            "count": 0,
+            "description": "20 کیلوگرم"
+          }
+        }
+      ],
+      "pricing": {
+        "totalPayablePrice": 101673000,
+        "currency": "IRR"
+      },
+      "refundType": "REFUNDABLE",
+      "policies": [
+        {
+          "origin": "فرودگاه بین‌المللی مهرآباد",
+          "destination": "فرودگاه بین‌المللی مشهد (فرودگاه شهید هاشمی‌نژاد)",
+          "cancellationPolicies": [
+            {
+              "description": "از لحظه صدور تا ساعت 12:00 ظهر 1 روز قبل از پرواز",
+              "adultPenaltyPercentage": 30,
+              "childPenaltyPercentage": 30,
+              "infantPenaltyPercentage": 30
+            },
+            {
+              "description": "از ساعت 12:00 ظهر 1 روز قبل از پرواز تا 3 ساعت مانده به لحظه پرواز",
+              "adultPenaltyPercentage": 60,
+              "childPenaltyPercentage": 60,
+              "infantPenaltyPercentage": 60
+            }
+          ]
+        }
+      ],
+      "installment": {
+        "total_price": 0,
+        "adult_price": 0,
+        "isAvailable": false
+      }
+    }
+  ],
+  "badges": [],
+  "recommendedTour": null
+}

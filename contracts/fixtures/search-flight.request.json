@@ -1,0 +1,8 @@
+{
+  "mode": "flight",
+  "origin": "THR",
+  "destination": "MHD",
+  "departure_date": "2030-01-15",
+  "passengers": {"adults": 1, "children": 0, "infants": 0},
+  "intent": "best"
+}

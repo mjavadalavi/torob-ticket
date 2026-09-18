@@ -1,0 +1,10 @@
+extends:
+  - recommended
+
+rules:
+  # Repository licensing has not been decided for the new implementation.
+  info-license: off
+  # This contract is intentionally local-first until a deployment hostname exists.
+  no-server-example.com: off
+  # A liveness probe has no meaningful client-error branch.
+  operation-4xx-response: off

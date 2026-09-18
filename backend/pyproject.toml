@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "torob-travel-api"
+version = "0.1.0"
+description = "FastAPI comparison core for Torob travel services"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.116,<0.141",
+    "httpx>=0.28,<1.0",
+    "pydantic>=2.11,<3.0",
+    "uvicorn[standard]>=0.35,<1.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "httpx>=0.28,<1.0",
+    "pyyaml>=6.0,<7.0",
+    "pytest>=8.4,<9.0",
+    "pytest-asyncio>=1.1,<2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["../tests/backend"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

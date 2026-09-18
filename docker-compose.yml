@@ -1,0 +1,39 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      TOROB_TRAVEL_PROJECT_NAME: ${TOROB_TRAVEL_PROJECT_NAME:-Torob Ticket API}
+      TOROB_TRAVEL_ENVIRONMENT: ${TOROB_TRAVEL_ENVIRONMENT:-development}
+      TOROB_TRAVEL_CORS_ORIGINS: ${TOROB_TRAVEL_CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      TOROB_TRAVEL_ADAPTER_TIMEOUT_SECONDS: ${TOROB_TRAVEL_ADAPTER_TIMEOUT_SECONDS:-8}
+      TOROB_TRAVEL_LOCATION_TIMEOUT_SECONDS: ${TOROB_TRAVEL_LOCATION_TIMEOUT_SECONDS:-2}
+      TOROB_TRAVEL_SEARCH_MAX_CONCURRENCY: ${TOROB_TRAVEL_SEARCH_MAX_CONCURRENCY:-16}
+      TOROB_TRAVEL_SEARCH_ADMISSION_TIMEOUT_SECONDS: ${TOROB_TRAVEL_SEARCH_ADMISSION_TIMEOUT_SECONDS:-0.1}
+      TOROB_TRAVEL_OFFER_TTL_SECONDS: ${TOROB_TRAVEL_OFFER_TTL_SECONDS:-900}
+      TOROB_TRAVEL_OFFER_REPOSITORY_MAX_ENTRIES: ${TOROB_TRAVEL_OFFER_REPOSITORY_MAX_ENTRIES:-5000}
+      TOROB_TRAVEL_API_WORKERS: ${TOROB_TRAVEL_API_WORKERS:-1}
+      TOROB_TRAVEL_REDIRECT_HOSTS_BY_PROVIDER: ${TOROB_TRAVEL_REDIRECT_HOSTS_BY_PROVIDER:-alibaba=www.alibaba.ir|alibaba.ir;snapptrip=www.snapptrip.com|snapptrip.com}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    environment:
+      API_URL: ${API_URL:-http://backend:8000/api/v1}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
