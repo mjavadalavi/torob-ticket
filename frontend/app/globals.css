@@ -186,6 +186,12 @@ body{font-family:iranyekan,Tahoma,"Segoe UI",sans-serif}
 .results-workspace__nearby-swipe{display:none;color:#657999;text-align:center}
 .results-workspace__date-rail{height:110px;display:grid;grid-template-columns:38px repeat(7,minmax(80px,1fr)) 38px;gap:7px;align-items:center;direction:rtl}
 .results-workspace__date-rail>button:first-child,.results-workspace__date-rail>button:last-child{height:44px;border:0;border-radius:9px;background:#fff;color:#174cbf;font-size:28px}
+.results-workspace__date-nav{display:grid;place-items:center;padding:0;direction:ltr;transition:background .18s ease,color .18s ease,transform .18s ease}
+.results-workspace__date-nav svg{pointer-events:none}
+.results-workspace__date-nav--previous svg{transform:rotate(-90deg)}
+.results-workspace__date-nav--next svg{transform:rotate(90deg)}
+.results-workspace__date-nav:not(:disabled):hover{background:#eef4ff;color:#0d43b8}
+.results-workspace__date-nav:not(:disabled):active{transform:scale(.96)}
 .results-workspace__date-button{height:82px;border:1px solid transparent;border-radius:10px;background:rgba(255,255,255,.86);display:flex;flex-direction:column;align-items:center;justify-content:center;direction:rtl;color:var(--ink);cursor:pointer}
 .results-workspace__date-button:hover{border-color:#9db8e4;background:#fff}
 .results-workspace__date-button.is-active{border:1.5px solid var(--red);color:var(--red);box-shadow:0 2px 8px rgba(239,16,41,.08);background:#fff}

@@ -348,7 +348,16 @@ function DateRail({
         {!calendarLoading && calendarError && <em className="is-error" role="status">{calendarError}</em>}
       </header>
       <nav ref={railRef} className="results-workspace__date-rail" aria-label="انتخاب تاریخ سفر">
-      <button type="button" aria-label="روز قبل" disabled={disabled || shiftDate(selectedDate, -1) < minimumDate} onClick={() => onSelect(shiftDate(selectedDate, -1))}>›</button>
+      <button
+        type="button"
+        className="results-workspace__date-nav results-workspace__date-nav--previous"
+        aria-label="روز قبل"
+        title="روز قبل"
+        disabled={disabled || shiftDate(selectedDate, -1) < minimumDate}
+        onClick={() => onSelect(shiftDate(selectedDate, -1))}
+      >
+        <ChevronIcon size={26} />
+      </button>
       {dates.map((value) => {
         const isOutsideRange = value < minimumDate || (maximumDate != null && value > maximumDate);
         const option = nearbyDates?.find((candidate) => candidate.date === value);
@@ -378,7 +387,16 @@ function DateRail({
           </button>
         );
       })}
-      <button type="button" aria-label="روز بعد" disabled={disabled || (maximumDate != null && shiftDate(selectedDate, 1) > maximumDate)} onClick={() => onSelect(shiftDate(selectedDate, 1))}>‹</button>
+      <button
+        type="button"
+        className="results-workspace__date-nav results-workspace__date-nav--next"
+        aria-label="روز بعد"
+        title="روز بعد"
+        disabled={disabled || (maximumDate != null && shiftDate(selectedDate, 1) > maximumDate)}
+        onClick={() => onSelect(shiftDate(selectedDate, 1))}
+      >
+        <ChevronIcon size={26} />
+      </button>
       </nav>
       <small className="results-workspace__nearby-swipe">برای دیدن روزهای اطراف، کارت‌ها را به چپ یا راست بکشید.</small>
     </section>
