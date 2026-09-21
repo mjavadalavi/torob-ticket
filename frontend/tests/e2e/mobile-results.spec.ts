@@ -356,7 +356,7 @@ async function gotoFlightResults(page: Page, width: number) {
   await expect(page.locator("article.offer-card--flight")).toHaveCount(1);
 }
 
-test("completed results stay inside every responsive breakpoint", async ({ page }) => {
+test("completed bus results stay responsive and keep the icon centered on its dotted track", async ({ page }) => {
   await installCompletedBusSearch(page);
   for (const width of [320, 360, 390, 414, 760, 761, 800, 900, 901, 935, 1024, 1100, 1280, 1440]) {
     await gotoBusResults(page, width);
@@ -367,10 +367,25 @@ test("completed results stay inside every responsive breakpoint", async ({ page 
     await expectInsideViewport(page, ".results-workspace__toolbar");
     await expectInsideViewport(page, ".offers-area");
     await expectInsideViewport(page, "article.offer-card:first-of-type");
-    await expect(page.locator("article.offer-card--bus .journey-mode img").first()).toHaveAttribute(
+    const card = page.locator("article.offer-card--bus").first();
+    await expect(card.locator(".journey-mode img")).toHaveAttribute(
       "src",
       "/images/icons/mode-bus-v2.png",
     );
+    const trackGeometry = await card.locator(".journey-line__track").evaluate((track) => {
+      const trackRect = track.getBoundingClientRect();
+      const iconRect = track.querySelector(".journey-mode")?.getBoundingClientRect();
+      const lineTop = Number.parseFloat(getComputedStyle(track, "::before").top);
+      return {
+        trackCenter: trackRect.top + trackRect.height / 2,
+        iconCenter: iconRect ? iconRect.top + iconRect.height / 2 : null,
+        lineTop,
+        expectedLineTop: trackRect.height / 2,
+      };
+    });
+    expect(trackGeometry.iconCenter).not.toBeNull();
+    expect(Math.abs(trackGeometry.iconCenter! - trackGeometry.trackCenter)).toBeLessThanOrEqual(1);
+    expect(Math.abs(trackGeometry.lineTop - trackGeometry.expectedLineTop)).toBeLessThanOrEqual(1);
   }
 });
 
@@ -392,8 +407,11 @@ test("flight card keeps its operator, route, explanation, and price inside narro
     await expect(card.locator(".journey")).toContainText("تهران");
     await expect(card.locator(".journey")).toContainText("مشهد");
     await expect(card.locator(".why")).toBeVisible();
+    await expect(card.locator(".why")).toContainText("رتبه‌بندی بر اساس");
+    await expect(card.locator(".why")).not.toContainText("پیشنهاد");
     await expect(card.locator(".price-box")).toContainText("۶,۲۶۲,۶۲۰");
     await expect(card.getByRole("link", { name: "مقایسه فروشنده‌ها" })).toBeVisible();
+    await expect(page.locator(".results-workspace__desktop-sort")).toHaveCount(0);
     expect(await card.evaluate((element) => {
       const cardBounds = element.getBoundingClientRect();
       return [".operator", ".journey", ".why", ".price-box"].every((selector) => {

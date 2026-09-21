@@ -139,10 +139,9 @@ export function localizeTravelValue(value: unknown, fallback = "—"): string {
 }
 
 export function recommendationText(
-  summary?: string | null,
+  _summary?: string | null,
   reasons: RecommendationReason[] = [],
 ): string | null {
-  if (summary && /[\u0600-\u06ff]/.test(summary)) return summary;
   const reasonLabels: Record<RecommendationReason, string> = {
     low_price: "قیمت مناسب",
     lowest_price: "کمترین قیمت نهایی",
@@ -155,8 +154,8 @@ export function recommendationText(
   };
   const readableReasons = reasons.map((reason) => reasonLabels[reason]);
   return readableReasons.length > 0
-    ? `به‌دلیل ${readableReasons.join("، ")}، این گزینه پیشنهاد شده است.`
-    : null;
+    ? `رتبه‌بندی بر اساس ${readableReasons.join("، ")}.`
+    : "رتبه‌بندی با داده‌های قابل‌مقایسهٔ موجود انجام شده است.";
 }
 
 export function sellerName(value: unknown): string {

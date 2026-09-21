@@ -372,97 +372,47 @@ body{font-family:iranyekan,Tahoma,"Segoe UI",sans-serif}
 .operator-logo.bus{background:#fff6ed!important;color:#c45d0a}
 .operator-logo img{display:block;width:100%;height:100%;padding:5px;object-fit:contain}
 .operator-logo>b{max-width:100%;padding:0 5px;overflow:hidden;color:currentColor;font-size:16px;font-weight:900;line-height:1.35;text-align:center;text-overflow:ellipsis;white-space:nowrap}
+.offer-card__sources{display:flex;align-items:center;justify-content:center;gap:5px;max-width:100%;margin-top:4px;color:#617596;font-size:10px;line-height:1.3}
+.offer-card__source-logos{display:flex;align-items:center;direction:ltr;min-height:28px}
+.offer-card__source-logo{width:28px;height:28px;display:grid;place-items:center;overflow:hidden;border:1px solid #d8e3ef;border-radius:50%;background:#fff;color:#174ebc;font-size:8px;box-shadow:0 1px 4px rgba(41,75,125,.12)}
+.offer-card__source-logo+.offer-card__source-logo{margin-inline-start:-8px}
+.offer-card__source-logo img{display:block;width:100%;height:100%;padding:3px;object-fit:contain}
+.offer-card__source-logo>b{max-width:100%;padding:0 2px;overflow:hidden;color:currentColor;font-size:8px;font-weight:900;line-height:1;text-align:center;text-overflow:ellipsis;white-space:nowrap}
+.offer-card__source-count{display:grid;width:24px;height:24px;margin-inline-start:-5px;place-items:center;border:1px solid #d8e3ef;border-radius:50%;background:#f4f7fb;color:#597095;font-size:9px;font-weight:800}
 .seller-logo{overflow:hidden;border:1px solid #d8e3ef;background:#fff!important}
 .seller-logo img{display:block;width:100%;height:100%;padding:5px;object-fit:contain}
 .seller-logo>b{display:grid;width:100%;height:100%;padding:0 4px;place-items:center;overflow:hidden;color:#174ebc;font-size:12px;font-weight:900;line-height:1.35;text-align:center;text-overflow:ellipsis;white-space:nowrap}
-.search-progress{--progress-accent:#1764d7;--progress-soft:#eef6ff;min-width:0;overflow:hidden;display:grid;grid-template-columns:minmax(280px,.88fr) minmax(360px,1.2fr);grid-template-rows:auto auto auto;column-gap:24px;row-gap:16px;padding:24px;border:1px solid #d7e3f2;border-top:3px solid var(--progress-accent);border-radius:16px;background:#fff;color:#263d68;box-shadow:0 10px 34px rgba(35,73,122,.08);direction:rtl}
+.search-progress{--progress-accent:#1764d7;--progress-soft:#eef6ff;min-width:0;overflow:hidden;display:grid;grid-template-columns:minmax(280px,1fr) minmax(320px,.92fr);grid-template-rows:auto auto auto auto auto;column-gap:24px;row-gap:16px;padding:24px;border:1px solid #d7e3f2;border-top:3px solid var(--progress-accent);border-radius:16px;background:#fff;color:#263d68;box-shadow:0 10px 34px rgba(35,73,122,.08);direction:rtl}
 .search-progress--train{--progress-accent:#17845d;--progress-soft:#ecf9f3}
 .search-progress--bus{--progress-accent:#e5711d;--progress-soft:#fff4e9}
 .search-progress__copy{min-width:0;grid-column:1;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:start}
 .search-progress__copy b{color:#102552;font-size:27px;line-height:1.55}
 .search-progress__copy>span{margin-top:4px;color:#536b94;font-size:15px;line-height:1.9}
 .search-progress__copy small{margin-top:9px;color:var(--progress-accent);font-size:13px;font-weight:800}
-.search-progress__illustration{min-width:0;grid-column:2;grid-row:1/3;position:relative;min-height:226px;overflow:hidden;border:1px solid color-mix(in srgb,var(--progress-accent) 18%,#fff);border-radius:16px;background:linear-gradient(180deg,#fbfdff 0%,var(--progress-soft) 100%)}
-.search-progress__illustration:before,.search-progress__illustration:after{content:"";position:absolute;width:84px;height:25px;border-radius:50%;background:#dfeeff;opacity:.72}
-.search-progress__illustration:before{top:28px;inset-inline-start:17%}
-.search-progress__illustration:after{top:54px;inset-inline-end:23%;transform:scale(.68)}
-.search-progress__illustration--running:after{box-shadow:28px 4px 0 -6px #dfeeff,-31px 8px 0 -8px #dfeeff}
-.search-progress__illustration--queued:before,.search-progress__illustration--queued:after{display:none}
-.search-progress__queued-art{position:absolute;inset:8px 50% auto auto;width:min(330px,78%);height:176px;object-fit:contain;transform:translateX(50%)}
-.search-progress__route{position:absolute;z-index:1;inset-inline:9%;top:45%;height:44px;border-top:3px dashed color-mix(in srgb,var(--progress-accent) 58%,#fff);border-radius:50%}
-.search-progress__vehicle{position:absolute;z-index:4;inset-inline-start:31%;top:47px;width:180px;height:88px;display:flex;align-items:center;justify-content:center;color:var(--progress-accent);filter:drop-shadow(0 9px 8px color-mix(in srgb,var(--progress-accent) 20%,transparent));animation:search-progress-travel 2.2s ease-in-out infinite alternate}
-.search-progress__vehicle-art{display:block;width:100%;height:100%;overflow:visible;fill:currentColor;stroke:none}
-.search-progress__vehicle-shadow{fill:none;stroke:color-mix(in srgb,var(--progress-accent) 20%,transparent);stroke-width:7;stroke-linecap:round}
-.search-progress__vehicle-detail{fill:none;stroke:color-mix(in srgb,var(--progress-accent) 55%,#102552);stroke-width:2;stroke-linecap:round}
-.search-progress__vehicle-panel{fill:color-mix(in srgb,var(--progress-accent) 78%,#fff)}
-.search-progress__vehicle-window{fill:#dcecff;stroke:none}
-.search-progress__vehicle-wheel{fill:#263d4f;stroke:#fff;stroke-width:3}
-.search-progress__vehicle-light{fill:#fff0a8}
-.search-progress__vehicle-art--flight{width:190px;color:#246ddd}
-.search-progress__flight-body{fill:#fff;stroke:#2458aa;stroke-width:2}
-.search-progress__flight-tail{fill:#ec3148;stroke:#b51c34;stroke-width:1.5}
-.search-progress__flight-wing{fill:#316fcb;stroke:#1f4f9a;stroke-width:1.5}
-.search-progress__flight-stripe{fill:none;stroke:#ec3148;stroke-width:4;stroke-linecap:round}
-.search-progress__flight-engine{fill:#ec3148;stroke:#b51c34;stroke-width:1.5}
-.search-progress__flight-cockpit{fill:#173d7b}
-.search-progress__vehicle-art--train{width:224px;color:#1c9568}
-.search-progress__vehicle-art--bus{width:166px;color:#ec771e}
-.search-progress--flight .search-progress__vehicle{inset-inline-start:27%;top:40px;width:198px}
-.search-progress--train .search-progress__vehicle{inset-inline-start:25%;width:228px;top:58px}
-.search-progress--bus .search-progress__vehicle{width:176px;top:49px}
-.search-progress__stop{position:absolute;z-index:5;top:44%;width:16px;height:16px;border:4px solid #fff;border-radius:50%;background:#ef1029;box-shadow:0 0 0 2px #ef1029}
-.search-progress__stop.is-start{inset-inline-start:8%}
-.search-progress__stop.is-end{inset-inline-end:8%}
-.search-progress__place{position:absolute;z-index:5;top:calc(44% + 30px);max-width:34%;overflow:hidden;color:#142951;font-size:15px;text-overflow:ellipsis;white-space:nowrap}
-.search-progress__place.is-start{inset-inline-start:4%}
-.search-progress__place.is-end{inset-inline-end:4%}
-.search-progress__landscape{position:absolute;inset-inline:0;bottom:0;height:96px;opacity:.58}
-.search-progress__landscape i{position:absolute;bottom:0;display:block;background:color-mix(in srgb,var(--progress-accent) 16%,#fff)}
-.search-progress__landscape i:nth-child(1){inset-inline-start:0;width:27%;height:46px;border-radius:0 70% 0 0}
-.search-progress__landscape i:nth-child(2){inset-inline-start:18%;width:25%;height:70px;border-radius:50% 50% 0 0}
-.search-progress__landscape i:nth-child(3){inset-inline-start:44%;width:22%;height:52px;border-radius:55% 55% 0 0}
-.search-progress__landscape i:nth-child(4){inset-inline-end:13%;width:26%;height:76px;border-radius:55% 55% 0 0}
-.search-progress__landscape i:nth-child(5){inset-inline-end:0;width:17%;height:39px;border-radius:70% 0 0 0}
-.search-progress--flight .search-progress__landscape i{border-radius:3px 3px 0 0}
-.search-progress--flight .search-progress__landscape i:nth-child(1){width:12%;height:52px}.search-progress--flight .search-progress__landscape i:nth-child(2){inset-inline-start:12%;width:7%;height:84px}.search-progress--flight .search-progress__landscape i:nth-child(3){inset-inline-start:20%;width:13%;height:40px}.search-progress--flight .search-progress__landscape i:nth-child(4){inset-inline-end:11%;width:10%;height:72px}.search-progress--flight .search-progress__landscape i:nth-child(5){width:12%;height:43px}
-.search-progress--train .search-progress__route{top:51%;height:10px;border-top:3px solid #7d98a6;border-bottom:3px solid #7d98a6;border-radius:0;background:repeating-linear-gradient(90deg,#7d98a6 0 4px,transparent 4px 13px)}
-.search-progress--train .search-progress__stop{top:50%}.search-progress--train .search-progress__place{top:calc(50% + 29px)}
-.search-progress--train .search-progress__landscape i{background:color-mix(in srgb,#56a977 23%,#fff)}
-.search-progress--bus .search-progress__route{top:51%;height:17px;border:0;border-radius:12px;background:#687888;transform:rotate(-1deg)}
-.search-progress--bus .search-progress__route:after{content:"";position:absolute;inset-inline:0;top:7px;border-top:2px dashed #fff}
-.search-progress--bus .search-progress__stop{top:50%}.search-progress--bus .search-progress__place{top:calc(50% + 29px)}
-.search-progress--bus .search-progress__landscape i{background:color-mix(in srgb,#c89f72 25%,#fff);border-radius:3px 3px 0 0}
-.search-progress__queue-orbit{position:absolute;top:42px;inset-inline-start:50%;width:340px;max-width:86%;height:92px;transform:translateX(50%);display:flex;align-items:center;justify-content:space-between}
-.search-progress__queue-orbit:before{content:"";position:absolute;z-index:0;inset-inline:42px;top:45px;border-top:2px dotted #a9c4ec}
-.search-progress__queue-item{position:relative;z-index:1;width:64px;height:64px;display:flex;align-items:center;justify-content:center;border:5px solid rgba(255,255,255,.82);border-radius:50%;background:#fff;color:#2864c7;box-shadow:0 7px 20px rgba(35,83,151,.14)}
-.search-progress__queue-item--search{animation:search-progress-pulse 1.5s ease-in-out infinite}
-.search-progress__queue-item--source,.search-progress__queue-item--compare{flex-direction:column;gap:5px}
-.search-progress__queue-item--source i{display:block;width:27px;height:4px;border-radius:4px;background:#80a7df}
-.search-progress__queue-item--source i:nth-child(2){width:20px}
-.search-progress__queue-item--compare i{display:block;width:28px;height:10px;border:2px solid #80a7df;border-radius:3px}
-.search-progress__queued-route{position:absolute;inset-inline:8%;bottom:24px;display:grid;grid-template-columns:minmax(0,1fr) 110px minmax(0,1fr);align-items:center;gap:9px;color:#142951;text-align:center}
-.search-progress__queued-route strong{min-width:0;overflow:hidden;font-size:14px;text-overflow:ellipsis;white-space:nowrap}
-.search-progress__queued-route>span{display:flex;align-items:center;justify-content:center;gap:11px}
-.search-progress__queued-route>span:before,.search-progress__queued-route>span:after{content:"";width:7px;height:7px;border:2px solid #ef1029;border-radius:50%;background:#fff}
-.search-progress__queued-route i{width:5px;height:5px;border-radius:50%;background:#9ab8e4;animation:search-progress-dot 1.2s ease-in-out infinite}
-.search-progress__queued-route i:nth-child(2){animation-delay:.18s}.search-progress__queued-route i:nth-child(3){animation-delay:.36s}
-.search-progress__steps{min-width:0;grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;margin:0;padding:0;list-style:none}
+.search-progress__artwork{min-width:0;grid-column:2;grid-row:1/4;position:relative;isolation:isolate;min-height:226px;overflow:hidden;border:1px solid color-mix(in srgb,var(--progress-accent) 20%,#fff);border-radius:16px;background:linear-gradient(180deg,#f4f9ff,#e9f2ff);box-shadow:inset 0 0 28px rgba(56,104,168,.08)}
+.search-progress__artwork-background,.search-progress__artwork-magnifier{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;backface-visibility:hidden}
+.search-progress__artwork-background{z-index:1}
+.search-progress__artwork-magnifier{z-index:2;will-change:transform,opacity;transform:translate3d(7%,3%,0) rotate(-4deg) scale(.94);animation:search-progress-magnifier-scan 4.6s ease-in-out infinite alternate;animation-play-state:paused}
+.search-progress__artwork.is-ready .search-progress__artwork-magnifier{animation-play-state:running}
+.search-progress__route-summary{min-width:0;grid-column:1;grid-row:2;align-self:stretch;display:grid;grid-template-columns:minmax(0,1fr) 32px minmax(0,1fr);align-items:center;gap:8px;padding:13px 16px;border:1px solid color-mix(in srgb,var(--progress-accent) 18%,#fff);border-radius:14px;background:var(--progress-soft)}
+.search-progress__route-summary>span{min-width:0;display:flex;flex-direction:column;gap:5px;text-align:center}
+.search-progress__route-summary small{color:#647897;font-size:11px}
+.search-progress__route-summary strong{overflow:hidden;color:#142951;font-size:17px;text-overflow:ellipsis;white-space:nowrap}
+.search-progress__route-separator{color:var(--progress-accent);font-size:24px;text-align:center}
+.search-progress__steps{min-width:0;grid-column:1;grid-row:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%;margin:0;padding:0;list-style:none}
 .search-progress__steps li{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;color:#72819c;font-size:11px;text-align:center}
 .search-progress__steps li:not(:last-child):after{content:"";position:absolute;z-index:0;top:17px;inset-inline-end:-15px;width:30px;border-top:2px dotted #cbd8e8}
 .search-progress__steps i{position:relative;z-index:1;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:2px solid #d2deeb;border-radius:50%;background:#fff;color:#7182a0;font-style:normal;font-weight:800}
 .search-progress__steps .is-done i,.search-progress__steps .is-active i{border-color:var(--progress-accent);color:var(--progress-accent);box-shadow:0 0 0 5px color-mix(in srgb,var(--progress-accent) 9%,#fff)}
 .search-progress__steps .is-active span,.search-progress__steps .is-done span{color:#29466f;font-weight:700}
-.search-progress__tracking{min-width:0;max-width:100%;grid-column:1/-1;grid-row:3;justify-self:start;overflow:hidden;padding:6px 10px;border:1px solid color-mix(in srgb,var(--progress-accent) 18%,#fff);border-radius:18px;background:var(--progress-soft);color:#607697;font-family:iranyekan,Tahoma,sans-serif;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
-.search-progress__skeleton{min-width:0;grid-column:1/-1;grid-row:4;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+.search-progress__tracking{min-width:0;max-width:100%;grid-column:1/-1;grid-row:4;justify-self:start;overflow:hidden;padding:6px 10px;border:1px solid color-mix(in srgb,var(--progress-accent) 18%,#fff);border-radius:18px;background:var(--progress-soft);color:#607697;font-family:iranyekan,Tahoma,sans-serif;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.search-progress__skeleton{min-width:0;grid-column:1/-1;grid-row:5;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
 .search-progress__skeleton-card{min-width:0;height:94px;display:grid;grid-template-columns:62px minmax(70px,1fr) minmax(58px,.72fr) 88px;align-items:center;gap:14px;padding:14px;border:1px solid #e0e8f2;border-radius:12px;background:#fff}
 .search-progress__skeleton-mode{width:58px;height:58px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--progress-soft);color:color-mix(in srgb,var(--progress-accent) 30%,#fff)}
 .search-progress__skeleton-lines,.search-progress__skeleton-price{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:9px}
-.search-progress__skeleton-lines i,.search-progress__skeleton-price i{display:block;height:11px;border-radius:7px;background:linear-gradient(100deg,#e9eef5 20%,#f8fafc 42%,#e9eef5 64%);background-size:220% 100%;animation:search-progress-shimmer 1.45s linear infinite}
+.search-progress__skeleton-lines i,.search-progress__skeleton-price i{display:block;height:11px;border-radius:7px;background:#e9eef5}
 .search-progress__skeleton-lines i:last-child{width:72%}.search-progress__skeleton-lines--short i:first-child{width:82%}.search-progress__skeleton-price i:first-child{height:16px}.search-progress__skeleton-price i:last-child{width:58%;align-self:center}
-@keyframes search-progress-travel{from{transform:translateX(14px)}to{transform:translateX(-14px)}}
-@keyframes search-progress-pulse{50%{transform:scale(1.08);box-shadow:0 9px 27px rgba(35,83,151,.22)}}
-@keyframes search-progress-dot{50%{transform:translateY(-4px);background:#2864c7}}
-@keyframes search-progress-shimmer{to{background-position:-220% 0}}
+@keyframes search-progress-magnifier-scan{0%{transform:translate3d(7%,3%,0) rotate(-4deg) scale(.94);opacity:.45}25%{transform:translate3d(-3%,-1%,0) rotate(2deg) scale(1);opacity:1}50%{transform:translate3d(4%,2%,0) rotate(-1deg) scale(.98);opacity:.9}75%{transform:translate3d(-8%,-3%,0) rotate(3deg) scale(.95);opacity:.65}100%{transform:translate3d(7%,-4%,0) rotate(4deg) scale(.94);opacity:.5}}
 
 @media(max-width:900px){
   .results-page>.site-header{display:none}
@@ -496,36 +446,12 @@ body{font-family:iranyekan,Tahoma,"Segoe UI",sans-serif}
   .search-progress__copy b{font-size:20px;line-height:1.6}
   .search-progress__copy>span{font-size:13px;line-height:1.85}
   .search-progress__copy small{margin-top:7px;font-size:12px}
-  .search-progress__illustration{order:2;width:100%;min-height:184px}
-  .search-progress__queued-art{inset-block-start:2px;width:min(300px,84%);height:146px}
-  .search-progress__route{inset-inline:18%;top:54%;height:26px}
-  .search-progress__vehicle{inset-inline-start:27%;top:43px;width:142px;height:80px}
-  .search-progress--flight .search-progress__vehicle{inset-inline-start:auto;left:50%;top:28px;width:144px;height:72px;translate:-50% 0}
-  .search-progress--flight .search-progress__vehicle-art--flight{width:100%;height:100%}
-  .search-progress--train .search-progress__vehicle{inset-inline-start:19%;top:56px;width:194px}
-  .search-progress--bus .search-progress__vehicle{top:48px;width:150px}
-  .search-progress--flight .search-progress__stop{top:53%;width:14px;height:14px;border-width:3px}
-  .search-progress--flight .search-progress__stop.is-start{inset-inline-start:16%}
-  .search-progress--flight .search-progress__stop.is-end{inset-inline-end:16%}
-  .search-progress--flight .search-progress__place{top:calc(53% + 27px);max-width:38%;min-width:64px;padding:4px 8px;border:1px solid rgba(35,86,171,.12);border-radius:8px;background:rgba(255,255,255,.86);font-size:12px;line-height:1.45;text-align:center}
-  .search-progress--flight .search-progress__place.is-start{inset-inline-start:10px}
-  .search-progress--flight .search-progress__place.is-end{inset-inline-end:10px}
-  .search-progress__stop{top:44%}
-  .search-progress__place{top:calc(44% + 28px);font-size:13px}
-  .search-progress--train .search-progress__route,.search-progress--bus .search-progress__route{top:51%}
-  .search-progress--train .search-progress__stop,.search-progress--bus .search-progress__stop{top:50%}
-  .search-progress--train .search-progress__place,.search-progress--bus .search-progress__place{top:calc(50% + 28px)}
-  .search-progress__landscape{height:82px}
-  .search-progress--flight .search-progress__landscape{height:62px;opacity:.38}
-  .search-progress__queue-orbit{top:35px;width:292px;height:82px}
-  .search-progress__queue-orbit:before{top:40px}
-  .search-progress__queue-item{width:56px;height:56px;border-width:4px}
-  .search-progress__queued-route{inset-inline:5%;bottom:22px;grid-template-columns:minmax(0,1fr) 90px minmax(0,1fr);gap:5px}
-  .search-progress__queued-route strong{font-size:13px}
-  .search-progress__steps{order:3}
+  .search-progress__artwork{order:2;width:100%;min-height:184px}
+  .search-progress__route-summary{order:3;width:100%;padding:14px}
+  .search-progress__steps{order:4}
   .search-progress__steps li{font-size:10px}
-  .search-progress__tracking{order:4;align-self:flex-start}
-  .search-progress__skeleton{order:5;grid-template-columns:1fr}
+  .search-progress__tracking{order:5;align-self:flex-start}
+  .search-progress__skeleton{order:6;grid-template-columns:1fr}
   .search-progress__skeleton-card{height:82px;grid-template-columns:50px minmax(70px,1fr) 72px;gap:10px;padding:10px}
   .search-progress__skeleton-mode{width:50px;height:50px}
   .search-progress__skeleton-lines--short{display:none}
@@ -534,26 +460,14 @@ body{font-family:iranyekan,Tahoma,"Segoe UI",sans-serif}
 @media(max-width:360px){
   .search-progress{padding:14px 10px}
   .search-progress__copy b{font-size:18px}
-  .search-progress__illustration{min-height:176px}
-  .search-progress__queue-orbit{top:32px;width:260px}
-  .search-progress__queue-item{width:52px;height:52px}
-  .search-progress__vehicle{inset-inline-start:23%}
-  .search-progress--flight .search-progress__vehicle{inset-inline-start:auto;width:132px;height:66px}
-  .search-progress--train .search-progress__vehicle{inset-inline-start:14%;width:184px}
+  .search-progress__artwork{min-height:176px}
+  .search-progress__route-summary{grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);padding:12px 8px}
   .search-progress__skeleton-card{grid-template-columns:48px minmax(62px,1fr) 62px;gap:8px;padding:9px}
   .search-progress__skeleton-mode{width:48px;height:48px}
 }
 
-/* The generated files are vehicle-only transparent sprites. The route, pins,
-   clouds, landscape, and city labels are separate static DOM layers; only this
-   wrapper receives motion. */
-.search-progress__vehicle-art{display:block;width:100%;height:100%;object-fit:contain}
-.search-progress--flight .search-progress__vehicle-art--flight,
-.search-progress--train .search-progress__vehicle-art--train,
-.search-progress--bus .search-progress__vehicle-art--bus{width:100%;height:100%}
-
 @media(prefers-reduced-motion:reduce){
-  .search-progress__vehicle,.search-progress__queue-item--search,.search-progress__queued-route i,.search-progress__skeleton-lines i,.search-progress__skeleton-price i{animation:none}
+  .search-progress__artwork-magnifier{animation:none;opacity:1;transform:none}
 }
 
 /* Recovery when a short-lived live offer is no longer available. */
@@ -703,13 +617,15 @@ body{font-family:iranyekan,Tahoma,"Segoe UI",sans-serif}
 .offer-card>.price-box{grid-area:price}
 .offer-card .operator strong,.offer-card .operator small{max-width:100%;overflow-wrap:anywhere}
 .offer-card .journey>div,.offer-card .journey-line{min-width:0}
-.offer-card .journey-line:after{left:8px;right:8px}
-.offer-card .journey-line i{
+.offer-card .journey-line:after{content:none}
+.offer-card .journey-line__track{position:relative;width:100%;height:40px;display:grid;place-items:center}
+.offer-card .journey-line__track:before{content:"";position:absolute;inset-inline:8px;top:50%;border-top:2px dotted currentColor;transform:translateY(-50%)}
+.offer-card .journey-line__track i{
   width:32px;
   height:32px;
   display:grid;
   place-items:center;
-  margin:2px 0;
+  margin:0;
   border:1px solid #d6e2f5;
   border-radius:50%;
   background:#fff;
@@ -763,7 +679,8 @@ body{font-family:iranyekan,Tahoma,"Segoe UI",sans-serif}
   .offer-card .journey b{font-size:16px}
   .offer-card .journey span{font-size:12px}
   .offer-card .journey-line span,.offer-card .journey-line small{font-size:10px}
-  .offer-card .journey-line i{width:30px;height:30px}
+  .offer-card .journey-line__track{height:36px}
+  .offer-card .journey-line__track i{width:30px;height:30px}
   .offer-card .journey-line .journey-mode{width:32px;height:32px}
   .offer-card .journey-mode .mode-image-icon{width:26px;height:26px}
   .offer-card>.why{padding:5px 8px;font-size:10px;text-align:right}

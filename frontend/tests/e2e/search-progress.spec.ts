@@ -19,7 +19,7 @@ const cases = [
   { mode: "bus", label: "اتوبوس‌ها", digit: "3" },
 ] as const;
 
-test("queued search uses the generic waiting mock before the mode-specific running scene", async ({ page }) => {
+test("queued and running searches use the same stable progress panel", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const searchId = `src_${"8".repeat(32)}`;
   let canRun = false;
@@ -52,12 +52,18 @@ test("queued search uses the generic waiting mock before the mode-specific runni
   const loader = page.locator(".search-progress--flight");
   await expect(loader).toHaveAttribute("data-status", "queued");
   await expect(loader).toContainText("در حال بررسی پروازها");
-  await expect(loader.locator(".search-progress__illustration--queued")).toBeVisible();
-  await expect(loader.locator(".search-progress__queued-art")).toHaveAttribute(
+  await expect(loader.locator(".search-progress__route-summary")).toContainText("تهران");
+  await expect(loader.locator(".search-progress__route-summary")).toContainText("مشهد");
+  await expect(loader.locator(".search-progress__artwork--flight")).toBeVisible();
+  await expect(loader.locator(".search-progress__artwork-background")).toHaveAttribute(
     "src",
-    "/images/loading/general-waiting-v1.png",
+    "/images/loading/ticket-search-background-v2.png",
   );
-  await expect(loader.locator(".search-progress__vehicle-art--flight")).toHaveCount(0);
+  await expect(loader.locator(".search-progress__artwork-magnifier")).toHaveAttribute(
+    "src",
+    "/images/loading/ticket-search-magnifier-v2.png",
+  );
+  await expect(loader.locator(".search-progress__artwork")).toHaveAttribute("data-artwork-ready", "true");
   const toolbarSearch = page.locator(".results-workspace__search-button");
   await toolbarSearch.hover();
   await expect(toolbarSearch).toHaveCSS("transform", "none");
@@ -88,39 +94,17 @@ test("queued search uses the generic waiting mock before the mode-specific runni
   canRun = true;
   await expect(loader).toHaveAttribute("data-status", "running", { timeout: 10_000 });
   await expect(loader).toContainText("در حال بررسی پروازها");
-  await expect(loader.locator(".search-progress__illustration--running")).toBeVisible();
-  await expect(loader.locator(".search-progress__vehicle-art--flight")).toBeVisible();
-
-  for (const width of [320, 390, 414]) {
-    await page.setViewportSize({ width, height: 844 });
-    const geometry = await loader.locator(".search-progress__illustration--running").evaluate((illustration) => {
-      const bounds = illustration.getBoundingClientRect();
-      const rect = (selector: string) => illustration.querySelector(selector)?.getBoundingClientRect();
-      const plane = rect(".search-progress__vehicle");
-      const origin = rect(".search-progress__place.is-start");
-      const destination = rect(".search-progress__place.is-end");
-      const artwork = illustration.querySelector(".search-progress__vehicle-art--flight") as HTMLImageElement | null;
-      return {
-        bounds: { left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom, width: bounds.width },
-        plane: plane && { left: plane.left, right: plane.right, top: plane.top, bottom: plane.bottom, width: plane.width },
-        origin: origin && { left: origin.left, right: origin.right, top: origin.top },
-        destination: destination && { left: destination.left, right: destination.right, top: destination.top },
-        artwork: artwork && { naturalWidth: artwork.naturalWidth, naturalHeight: artwork.naturalHeight },
-        placesOverlap: Boolean(origin && destination && origin.left < destination.right && origin.right > destination.left),
-      };
-    });
-
-    expect(geometry.plane).not.toBeNull();
-    expect(geometry.origin).not.toBeNull();
-    expect(geometry.destination).not.toBeNull();
-    expect(geometry.artwork?.naturalWidth).toBe(1774);
-    expect(geometry.artwork?.naturalHeight).toBe(887);
-    expect(geometry.plane!.left).toBeGreaterThanOrEqual(geometry.bounds.left + 3);
-    expect(geometry.plane!.right).toBeLessThanOrEqual(geometry.bounds.right - 3);
-    expect(geometry.origin!.left).toBeGreaterThanOrEqual(geometry.bounds.left + 8);
-    expect(geometry.destination!.right).toBeLessThanOrEqual(geometry.bounds.right - 8);
-    expect(geometry.placesOverlap).toBe(false);
-  }
+  await expect(loader.locator(".search-progress__route-summary")).toBeVisible();
+  await expect(loader.locator(".search-progress__artwork--flight")).toBeVisible();
+  await expect(loader.locator(".search-progress__artwork-magnifier")).toBeVisible();
+  await expect(loader.locator(".search-progress__artwork")).toHaveAttribute("data-artwork-ready", "true");
+  await expect(loader.locator(".search-progress__skeleton-card")).toHaveCount(2);
+  await expect.poll(() => loader.locator(".search-progress__artwork-magnifier").evaluate((element) => (
+    getComputedStyle(element).animationName
+  ))).toBe("search-progress-magnifier-scan");
+  await expect.poll(() => loader.locator(".search-progress__artwork-magnifier").evaluate((element) => (
+    getComputedStyle(element).animationDirection
+  ))).toBe("alternate");
 });
 
 test("same-origin search proxy preserves background-job control headers", async ({ request }) => {
@@ -253,39 +237,24 @@ for (const item of cases) {
     await expect(loader).toContainText("تهران");
     await expect(loader).toContainText(destination);
     await expect(loader).toContainText("شناسهٔ پیگیری");
-    await expect(loader.locator(".search-progress__illustration")).toBeVisible();
-    await expect(loader.locator(`.search-progress__vehicle-art--${item.mode}`)).toBeVisible();
-    const artwork = loader.locator(`.search-progress__vehicle-art--${item.mode}`);
-    await expect(artwork).toHaveAttribute(
+    await expect(loader.locator(".search-progress__route-summary")).toBeVisible();
+    await expect(loader.locator(`.search-progress__artwork--${item.mode}`)).toBeVisible();
+    await expect(loader.locator(".search-progress__artwork-background")).toHaveAttribute(
       "src",
-      `/images/loading/${item.mode === "flight" ? "flight-vehicle-v3" : `${item.mode}-vehicle-v2`}.png`,
+      "/images/loading/ticket-search-background-v2.png",
     );
-    await expect.poll(() => artwork.evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBe(1774);
-    const layerMotion = await loader.locator(".search-progress__illustration").evaluate((illustration) => {
-      const animationName = (selector: string) => {
-        const element = illustration.querySelector(selector);
-        return element ? getComputedStyle(element).animationName : null;
-      };
-      return {
-        vehicle: animationName(".search-progress__vehicle"),
-        route: animationName(".search-progress__route"),
-        start: animationName(".search-progress__stop.is-start"),
-        end: animationName(".search-progress__stop.is-end"),
-        origin: animationName(".search-progress__place.is-start"),
-        destination: animationName(".search-progress__place.is-end"),
-      };
-    });
-    expect(layerMotion.vehicle).toBe("search-progress-travel");
-    expect(layerMotion.route).toBe("none");
-    expect(layerMotion.start).toBe("none");
-    expect(layerMotion.end).toBe("none");
-    expect(layerMotion.origin).toBe("none");
-    expect(layerMotion.destination).toBe("none");
+    await expect(loader.locator(".search-progress__artwork-magnifier")).toHaveAttribute(
+      "src",
+      "/images/loading/ticket-search-magnifier-v2.png",
+    );
+    await expect(loader.locator(".search-progress__artwork")).toHaveAttribute("data-artwork-ready", "true");
     await expect(loader.locator(".search-progress__skeleton-card")).toHaveCount(2);
-    await expect(loader.locator(".search-progress__skeleton-mode .mode-image-icon").first()).toHaveAttribute(
-      "src",
-      `/images/icons/mode-${item.mode}-v2.png`,
-    );
+    await expect.poll(() => loader.locator(".search-progress__artwork-magnifier").evaluate((element) => (
+      getComputedStyle(element).animationName
+    ))).toBe("search-progress-magnifier-scan");
+    await expect.poll(() => loader.locator(".search-progress__artwork-magnifier").evaluate((element) => (
+      getComputedStyle(element).animationDirection
+    ))).toBe("alternate");
     await expect.poll(() => page.evaluate(() => (
       document.documentElement.scrollWidth <= document.documentElement.clientWidth
     ))).toBe(true);
@@ -355,6 +324,9 @@ test("empty, provider-unavailable, and failed result states stay responsive", as
     state = expected.state;
     await page.goto(`/results?${params.toString()}`);
     await expect(page.locator(".results-workspace__state")).toContainText(expected.text, { timeout: 15_000 });
+    if (expected.state === "empty") {
+      await expect(page.getByRole("heading", { name: "هیچ موردی برای پرواز از تهران به مشهد پیدا نشد" })).toBeVisible();
+    }
     await expect(page.locator(".live-note")).toHaveCount(0);
     for (const width of [320, 900, 901, 1100, 1440]) {
       await page.setViewportSize({ width, height: width === 320 ? 800 : 900 });

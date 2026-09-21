@@ -5,7 +5,7 @@ import { OfferGroup } from "@/lib/types";
 import { GuaranteeMark, TorobPay } from "./brand";
 import { ClockIcon, ModeIcon } from "./icons";
 import { ModeDetailTags } from "./mode-details";
-import { OperatorLogo } from "./operator-logo";
+import { OperatorLogo, ProviderLogoStrip } from "./operator-logo";
 
 export function OfferCard({ offer, featured = false, resultsUrl }: { offer: OfferGroup; featured?: boolean; resultsUrl: string }) {
   const content = modeContent[offer.mode];
@@ -39,18 +39,21 @@ export function OfferCard({ offer, featured = false, resultsUrl }: { offer: Offe
         />
         <strong>{localizeTravelValue(offer.attributes.operator)}</strong>
         {offer.attributes.service_number && <small>شماره {toFa(offer.attributes.service_number)}</small>}
+        <ProviderLogoStrip sellers={offer.seller_offers} />
       </div>
       <div className="journey">
         <div><b>{time(offer.departure_at)}</b><span>{locationName(offer.origin)}</span></div>
         <div className="journey-line">
           {travelDuration && <span><ClockIcon size={17} /> {travelDuration}</span>}
-          <i className={`journey-mode journey-mode--${offer.mode}`} aria-hidden="true"><ModeIcon mode={offer.mode} size={22} /></i>
+          <div className="journey-line__track" aria-hidden="true">
+            <i className={`journey-mode journey-mode--${offer.mode}`}><ModeIcon mode={offer.mode} size={22} /></i>
+          </div>
           {stops && <small>{stops}</small>}
         </div>
         <div><b>{arrivalTime}</b><span>{locationName(offer.destination)}</span></div>
       </div>
       <div className="offer-meta"><ModeDetailTags details={offer.mode_details} capabilities={offer.recommended_capabilities} />{remainingSeats != null && <em>{toFa(remainingSeats)} صندلی باقی مانده</em>}</div>
-      {featured && recommendation && <div className="why"><strong>چرا این گزینه؟</strong><span>{recommendation}</span></div>}
+      {featured && recommendation && <div className="why"><strong>چرا این رتبه؟</strong><span>{recommendation}</span></div>}
       <div className="price-box">
         {supports(offer.recommended_capabilities, "torob_pay") && <TorobPay />}
         <div><b>{price(offer.recommended_price.amount)}</b> <span>تومان</span></div>

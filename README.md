@@ -1,39 +1,61 @@
 # Torob Ticket
 
-Torob Ticket is a provider-neutral travel comparison product. It keeps the Torob
-search experience, compares offers from flight/train/bus OTA adapters, explains
-the ranking, and sends checkout to the selected OTA. Passenger forms and payment
-do not live in this product.
+Torob Ticket is a provider-neutral travel comparison product for flights, trains,
+and buses. It keeps the Torob search experience, queries verified OTA adapters,
+groups identical journeys, explains the ranking, and sends the user to the
+selected seller. Passenger forms and payment do not live in this product.
 
-The new implementation is split into a FastAPI service and a RTL Next.js web
-client. The original Laravel code in this repository is retained as historical
-reference only; it is not part of the new runtime.
+The active implementation is split into a FastAPI service and an RTL-first
+Next.js web client. Runtime code lives in `backend/` and `frontend/`. The
+original Laravel application is preserved under `legacy/laravel/` for historical
+reference only.
 
-## Run with Docker
+## Highlights
 
-```sh
-cp .env.torob.example .env
-docker compose up --build
-```
+- Live city autocomplete and provider-backed searches for flight, train, and bus.
+- Background search jobs with visible queued, running, completed, and failed states.
+- One grouped journey card with ranked seller offers and official provider logos.
+- Nearby-date availability, filtering, sorting, seller comparison, refund rules,
+  and provider-aware seat maps where the upstream contract supports them.
+- Same-origin logo and travel API proxies with strict host allowlists.
+- Responsive desktop and mobile result layouts with RTL support.
 
-- Web: <http://localhost:3000>
-- API: <http://localhost:8000>
-- API health: <http://localhost:8000/health>
-- Interactive API docs: <http://localhost:8000/docs>
-
-## Run without Docker
+## Run locally (without Docker)
 
 The backend requires Python 3.12+ and the frontend requires Node.js 20+.
 
 ```sh
 python3.12 -m venv backend/.venv
 backend/.venv/bin/pip install -e 'backend[test]'
-backend/.venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000
+backend/.venv/bin/uvicorn app.main:app --app-dir backend \
+  --host 127.0.0.1 --reload --port 8100
+```
 
+In a second terminal:
+
+```sh
 cd frontend
 npm install
-API_URL=http://localhost:8000/api/v1 npm run dev
+API_URL=http://127.0.0.1:8100/api/v1 \
+  npm run dev -- --hostname 127.0.0.1 --port 3100
 ```
+
+- Web app: <http://127.0.0.1:3100>
+- API: <http://127.0.0.1:8100>
+- API health: <http://127.0.0.1:8100/health>
+- Interactive API docs: <http://127.0.0.1:8100/docs>
+
+## Run with Docker (optional)
+
+Docker is not required for local development. If you prefer the containerized
+setup, run:
+
+```sh
+cp .env.torob.example .env
+docker compose up --build
+```
+
+The default container ports are 3000 for the web client and 8000 for the API.
 
 ## Verify
 
@@ -45,32 +67,40 @@ npm run build
 npm run test:e2e
 ```
 
-The browser suite starts isolated servers on ports 8100 and 3100 and exercises
-live provider-backed city search, a bus result flow, inline result editing,
-seller comparison, and expired-result recovery. It never follows the external
-OTA link.
+The Playwright suite starts isolated servers on ports 8100 and 3100. It covers
+live provider-backed city search, all three loading flows, result editing,
+official operator and seller logos, nearby dates, seller comparison, mobile
+layouts, and expired-result recovery. It does not follow an external OTA link.
 
 ## Demo video
 
-[`demo.mp4`](demo.mp4) is an 81-second, 1440×900 recording of the live product.
-It shows searchable cities, the shared and mode-specific loading states,
-five-day nearby prices, ranked flight results, seller details and refund rules,
-real train results, responsive mobile views, and the bus seat-map entry plus
-provider-aware seat availability state. No
-response fixture is used while recording. With production servers running on
-ports 8100 and 3100, the reproducible recorder can be run with:
+The complete live-flow recording is included in [`demo.mp4`](./demo.mp4).
+It is a 134.68-second, 1440×900 H.264 MP4 weighing about 9 MB, well below the
+five-minute and 200 MB delivery limits.
+
+<video controls preload="metadata" width="960" src="./demo.mp4">
+  Your browser does not support inline video. [Download the demo](./demo.mp4).
+</video>
+
+The recording covers the home search flow, flight/train/bus tabs, mode-specific
+loading states, nearby-date prices, ranked results, official source-site logos,
+seller comparison, real OTA pages, and responsive mobile controls. It uses live
+provider responses rather than response fixtures.
+
+With the local API and web app already running on ports 8100 and 3100, reproduce
+the recording with:
 
 ```sh
 cd frontend
 DEMO_BASE_URL=http://127.0.0.1:3100 \
+DEMO_MAX_DURATION_SECONDS=300 \
+DEMO_MAX_FILE_SIZE_MB=200 \
 npm run demo:record
 ```
 
-The recorder probes current provider inventory first and chooses live dates for
-flight, train, and bus automatically. It then completes every journey from the
-home search form, including each mode-specific loading state. Convert the
-resulting WebM to H.264 MP4 with `ffmpeg`; the delivered file uses `yuv420p` and
-`faststart` for broad playback compatibility.
+The recorder probes current provider inventory first and selects live dates for
+flight, train, and bus automatically. It encodes the final file as H.264 with
+`yuv420p` and fast-start metadata for broad playback compatibility.
 
 ## API contract
 

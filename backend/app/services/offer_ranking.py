@@ -46,17 +46,14 @@ class OfferRankingService:
                     "rank": index,
                     "score": round(item.score, 2),
                     "recommendation_reasons": item.reasons,
-                    "recommendation_summary": self._summary(
-                        item.reasons,
-                        item.recommended_seller_offer.seller.name,
-                    ),
+                    "recommendation_summary": self._summary(item.reasons),
                 }
             )
             for index, item in enumerate(scored, start=1)
         ]
 
     @staticmethod
-    def _summary(reasons: list[RecommendationReason], seller_name: str) -> str:
+    def _summary(reasons: list[RecommendationReason]) -> str:
         labels = {
             RecommendationReason.LOW_PRICE: "قیمت مناسب",
             RecommendationReason.LOWEST_PRICE: "کمترین قیمت نهایی",
@@ -69,9 +66,9 @@ class OfferRankingService:
         }
         readable = [labels[reason] for reason in reasons]
         if not readable:
-            return f"پیشنهاد {seller_name} با داده‌های قابل‌مقایسهٔ موجود انتخاب شده است."
+            return "رتبه‌بندی با داده‌های قابل‌مقایسهٔ موجود انجام شده است."
         if len(readable) == 1:
             explanation = readable[0]
         else:
             explanation = "، ".join(readable[:-1]) + " و " + readable[-1]
-        return f"پیشنهاد {seller_name}: {explanation}."
+        return f"رتبه‌بندی بر اساس {explanation}."

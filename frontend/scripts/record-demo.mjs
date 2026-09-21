@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, rm, copyFile } from "node:fs/promises";
+import { mkdtemp, rm, copyFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -19,6 +19,8 @@ const outputPath = process.env.DEMO_OUTPUT
   ? path.resolve(process.cwd(), process.env.DEMO_OUTPUT)
   : path.join(repositoryRoot, "demo.mp4");
 const maxDurationSeconds = Number(process.env.DEMO_MAX_DURATION_SECONDS ?? "300");
+const maxFileSizeMb = Number(process.env.DEMO_MAX_FILE_SIZE_MB ?? "200");
+const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
 const actionPauseScale = Number(process.env.DEMO_PAUSE_SCALE ?? "1");
 
 const modes = [
@@ -233,7 +235,7 @@ async function assertNoPlaceholderSeller(page) {
 
 async function waitForNearbyDateStatuses(page) {
   const rail = page.getByRole("navigation", { name: "انتخاب تاریخ سفر" });
-  await rail.waitFor({ state: "visible", timeout: 30_000 });
+  await rail.waitFor({ state: "visible", timeout: 5_000 });
   await page.waitForFunction(() => {
     const labels = Array.from(
       document.querySelectorAll(".results-workspace__date-button b"),
@@ -241,11 +243,11 @@ async function waitForNearbyDateStatuses(page) {
     );
     return labels.length >= 5
       && labels.filter((label) => /تومان|تکمیل ظرفیت|نامشخص|موجود/.test(label)).length >= 3;
-  }, undefined, { timeout: 45_000 }).catch(() => {
-    console.warn("[record] nearby-date providers did not resolve at least three dates");
+  }, undefined, { timeout: 4_000 }).catch(() => {
+    console.warn("[record] nearby-date providers did not resolve within four seconds; continuing");
   });
   await rail.scrollIntoViewIfNeeded();
-  await pause(1_600);
+  await pause(800);
 }
 
 async function waitForProviderIdentity(page) {
@@ -308,10 +310,19 @@ async function waitForCompletedResults(page, mode, removeDelay) {
   throw new Error(`Live ${mode} flow exhausted its retry budget.`);
 }
 
-async function submitFromHome(page, spec, departureDate) {
-  await page.goto(`/?mode=${spec.mode}`, { waitUntil: "domcontentloaded" });
+async function submitFromHome(page, spec, departureDate, fromMode = spec.mode) {
+  await page.goto(`/?mode=${fromMode}`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "بلیت ترب" }).waitFor({ state: "visible" });
   await pause(1_300);
+
+  if (fromMode !== spec.mode) {
+    console.log(`[record] switching ${fromMode} → ${spec.mode} tab before a new search`);
+    const modeTabs = page.getByRole("navigation", { name: "نوع بلیت" });
+    await modeTabs.getByRole("link", { name: spec.label, exact: true }).click();
+    await page.waitForURL(new RegExp(`mode=${spec.mode}`));
+    await page.getByRole("heading", { name: "بلیت ترب" }).waitFor({ state: "visible" });
+    await pause(900);
+  }
 
   await selectCity(page, "مبدا", spec.origin.slice(0, 2), spec.origin);
   await selectCity(
@@ -326,32 +337,6 @@ async function submitFromHome(page, spec, departureDate) {
   await page.getByRole("button", { name: "جستجو", exact: true }).click();
   await page.waitForURL(/\/results\?/, { timeout: 30_000 });
   return waitForCompletedResults(page, spec.mode, removeDelay);
-}
-
-async function showHomeModeTabs(page) {
-  console.log("[record] home ticket tabs and searchable city lists");
-  await page.goto("/?mode=flight", { waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "بلیت ترب" }).waitFor({ state: "visible" });
-  await pause(1_000);
-
-  const modeTabs = page.getByRole("navigation", { name: "نوع بلیت" });
-  for (const spec of [modes[1], modes[2], modes[0]]) {
-    await modeTabs.getByRole("link", { name: spec.label, exact: true }).click();
-    await page.waitForURL(new RegExp(`mode=${spec.mode}`));
-    await pause(900);
-  }
-
-  const origin = page.getByRole("combobox", { name: "مبدا" });
-  await origin.click();
-  await page.getByRole("listbox", { name: "انتخاب مبدا" }).waitFor({ state: "visible" });
-  await pause(800);
-  await origin.fill("ته");
-  await page.getByRole("option").filter({ hasText: "تهران" }).first().waitFor({
-    state: "visible",
-    timeout: 15_000,
-  });
-  await pause(800);
-  await page.keyboard.press("Escape");
 }
 
 async function openSellerComparison(page, offerCard) {
@@ -370,19 +355,161 @@ async function openSellerComparison(page, offerCard) {
   });
 }
 
-async function showFlightFlow(page, spec, departureDate) {
-  console.log("[record] flight home → loader → results");
-  await submitFromHome(page, spec, departureDate);
+async function showExternalSellerPage(page, redirectDialog, previewUrl) {
+  const applicationOrigin = new URL(baseURL).origin;
+  const comparisonUrl = page.url();
+  const externalButton = redirectDialog.getByRole("button", {
+    name: "مشاهده در سایت فروشنده",
+    exact: true,
+  });
+  const context = page.context();
+
+  const popupTarget = context.waitForEvent("page", { timeout: 8_000 })
+    .then(async (popup) => {
+      const openedExternalPage = await popup.waitForURL(
+        (url) => ["http:", "https:"].includes(url.protocol)
+          && url.origin !== applicationOrigin,
+        { timeout: 8_000 },
+      ).then(() => true).catch(() => false);
+      if (!openedExternalPage) {
+        await popup.close().catch(() => undefined);
+        return null;
+      }
+      return { kind: "popup", target: popup };
+    })
+    .catch(() => null);
+  const samePageTarget = page.waitForURL(
+    (url) => url.origin !== applicationOrigin,
+    { timeout: 8_000 },
+  )
+    .then(() => ({ kind: "same-page", target: page }))
+    .catch(() => null);
+
+  await externalButton.click({ noWaitAfter: true }).catch((error) => {
+    console.warn(`[record] seller navigation click reported: ${error.message}`);
+  });
+
+  let visit = await Promise.race([
+    popupTarget,
+    samePageTarget,
+    sleep(8_000).then(() => null),
+  ]);
+  if (visit?.kind === "popup") {
+    const popupUrl = visit.target.url();
+    await page.goto(popupUrl, { waitUntil: "commit", timeout: 8_000 }).catch((error) => {
+      console.warn(`[record] mirroring seller popup in the recorded tab reported: ${error.message}`);
+    });
+    await visit.target.close().catch(() => undefined);
+    visit = new URL(page.url()).origin !== applicationOrigin
+      ? { kind: "same-page", target: page }
+      : null;
+  }
+  if (!visit && previewUrl) {
+    console.warn("[record] seller click did not navigate; opening its verified preview URL directly");
+    await page.goto(previewUrl, { waitUntil: "commit", timeout: 8_000 }).catch((error) => {
+      console.warn(`[record] verified seller URL reported: ${error.message}`);
+    });
+    if (new URL(page.url()).origin !== applicationOrigin) {
+      visit = { kind: "same-page", target: page };
+    }
+  }
+  if (!visit) {
+    if (await redirectDialog.isVisible().catch(() => false)) {
+      await redirectDialog.getByRole("button", { name: "انصراف" }).click().catch(() => undefined);
+    }
+    throw new Error("The real seller page did not open in the recorded tab.");
+  }
+
+  const sellerPage = visit.target;
+  await sellerPage.bringToFront().catch(() => undefined);
+  await sellerPage.waitForLoadState("domcontentloaded", { timeout: 8_000 }).catch(() => {
+    console.warn("[record] seller page did not finish loading; showing its current state");
+  });
+  await sellerPage.locator("body").waitFor({ state: "visible", timeout: 3_000 }).catch(() => undefined);
+
+  const sellerUrl = sellerPage.url();
+  const sellerText = await sellerPage.locator("body").innerText({ timeout: 2_000 }).catch(() => "");
+  if (/captcha|verify (that )?you are human|کپچا|انسان هستید/i.test(sellerText)) {
+    console.warn(`[record] seller displayed a verification page at ${sellerUrl}`);
+  } else {
+    console.log(`[record] showing the real seller page at ${sellerUrl}`);
+  }
+  // Leave enough time for the viewer to understand the real seller page.
+  await pause(4_000);
+
+  await page.goBack({ waitUntil: "domcontentloaded", timeout: 12_000 }).catch(() => undefined);
+  if (new URL(page.url()).origin !== applicationOrigin) {
+    await page.goto(comparisonUrl, { waitUntil: "domcontentloaded", timeout: 12_000 });
+  }
+  await page.getByRole("heading", { name: "مقایسه فروشنده‌ها" }).waitFor({
+    state: "visible",
+    timeout: 12_000,
+  });
+  await pause(500);
+}
+
+async function showSellerRedirect(page) {
+  const sellerButton = page.getByRole("button", {
+    name: "مشاهده در فروشگاه",
+    exact: true,
+  }).first();
+  if (!(await sellerButton.isVisible().catch(() => false))) {
+    throw new Error("The seller comparison has no visible outbound action.");
+  }
+
+  const previewResponsePromise = page.waitForResponse(
+    (response) => response.request().method() === "GET"
+      && /\/api\/travel\/offers\/[^/]+\/redirect\?seller_offer_id=/.test(response.url()),
+    { timeout: 10_000 },
+  ).catch(() => null);
+  await sellerButton.click();
+  const previewResponse = await previewResponsePromise;
+  const previewBody = await previewResponse?.json().catch(() => null);
+  const redirectDialog = page.getByRole("dialog", { name: "بررسی در سایت فروشنده" });
+  await redirectDialog.waitFor({ state: "visible", timeout: 10_000 });
+  await page.waitForFunction(
+    () => document.querySelector('.seller-redirect-panel[aria-busy="false"]') !== null,
+    undefined,
+    { timeout: 12_000 },
+  ).catch(() => undefined);
+
+  const externalButton = redirectDialog.getByRole("button", {
+    name: "مشاهده در سایت فروشنده",
+    exact: true,
+  });
+  if (!(await externalButton.isVisible().catch(() => false))) {
+    const message = await redirectDialog.innerText().catch(() => "");
+    await redirectDialog.getByRole("button", { name: "بستن پنجره" }).click().catch(() => undefined);
+    throw new Error(`The seller redirect preview is unavailable: ${message.replace(/\s+/g, " ").trim()}`);
+  }
+
+  let previewUrl;
+  if (previewBody?.is_external === true && typeof previewBody.url === "string") {
+    try {
+      const parsed = new URL(previewBody.url);
+      if (["http:", "https:"].includes(parsed.protocol) && parsed.origin !== new URL(baseURL).origin) {
+        previewUrl = parsed.toString();
+      }
+    } catch {
+      console.warn("[record] seller preview returned an invalid external URL");
+    }
+  }
+  await pause(900);
+  await showExternalSellerPage(page, redirectDialog, previewUrl);
+}
+
+async function showFlightFlow(page, spec, departureDate, fromMode = spec.mode) {
+  console.log("[record] flight search → loader → results");
+  await submitFromHome(page, spec, departureDate, fromMode);
   await assertNoPlaceholderSeller(page);
   await waitForNearbyDateStatuses(page);
   await waitForProviderIdentity(page);
 
   const removeDelay = await ensureNextJobShowsRunning(page);
-  await page.locator(".results-workspace__sort-trigger:visible").first().click();
-  const sortMenu = page.getByRole("listbox", { name: "روش مرتب‌سازی" });
-  await sortMenu.waitFor({ state: "visible" });
+  const cheapestTab = page.getByRole("tab", { name: /ارزان‌ترین/ }).first();
+  await cheapestTab.waitFor({ state: "visible" });
   await pause(650);
-  await sortMenu.getByRole("option").filter({ hasText: "ارزان‌ترین" }).click();
+  await cheapestTab.click();
   await waitForCompletedResults(page, "flight", removeDelay);
 
   await openSellerComparison(page, page.locator("article.offer-card").first());
@@ -413,35 +540,37 @@ async function showFlightFlow(page, spec, departureDate) {
   await pause(1_500);
   await refundDialog.getByRole("button", { name: "بستن پنجره" }).click();
 
-  await page.getByRole("button", { name: "مشاهده در فروشگاه" }).first().click();
-  const redirectDialog = page.getByRole("dialog", { name: "بررسی در سایت فروشنده" });
-  await redirectDialog.waitFor({ state: "visible" });
-  await page.waitForFunction(
-    () => document.querySelector('.seller-redirect-panel[aria-busy="false"]') !== null,
-    undefined,
-    { timeout: 30_000 },
-  );
-  await redirectDialog
-    .getByText("قیمت، موجودی و جزئیات بلیت را پیش از خرید دوباره بررسی کنید", {
-      exact: false,
-    })
-    .waitFor({ state: "visible" });
-  await pause(1_700);
-  await redirectDialog.getByRole("button", { name: "انصراف" }).click();
-  await pause(600);
+  await showSellerRedirect(page);
 }
 
-async function showTrainFlow(page, spec, departureDate) {
-  console.log("[record] train home → train-specific loader → live results");
-  await submitFromHome(page, spec, departureDate);
+async function showTrainFlow(page, spec, departureDate, fromMode = spec.mode) {
+  console.log("[record] train tab → new search → train-specific loader → results");
+  await submitFromHome(page, spec, departureDate, fromMode);
   await assertNoPlaceholderSeller(page);
   await waitForNearbyDateStatuses(page);
-  await waitForProviderIdentity(page);
+  const trainOffer = await waitForProviderIdentity(page);
+  await openSellerComparison(page, trainOffer);
+  await pause(700);
+  await showSellerRedirect(page);
 }
 
-async function showBusFlow(page, spec, departureDate) {
-  console.log("[record] bus home → loader → results → seat map");
-  await submitFromHome(page, spec, departureDate);
+async function showBusFlow(page, spec, departureDate, fromMode = spec.mode) {
+  console.log("[record] bus tab → new search → loader → results → seat map");
+  let busOffer;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      busOffer = await submitFromHome(page, spec, departureDate, fromMode);
+      break;
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      if (!message.includes("Live bus flow returned no visible offer") || attempt === 3) {
+        throw cause;
+      }
+      console.warn(`[record] bus search returned no offer; retrying the same complete flow (${attempt + 1}/3)`);
+      await pause(900);
+    }
+  }
+  if (!busOffer) throw new Error("Live bus flow did not produce a visible offer.");
   const resultsUrl = page.url();
   await assertNoPlaceholderSeller(page);
   await waitForNearbyDateStatuses(page);
@@ -451,26 +580,40 @@ async function showBusFlow(page, spec, departureDate) {
     .locator("article.offer-card")
     .filter({ hasText: "انتخاب صندلی" })
     .first();
-  await seatSelectionCard.waitFor({ state: "visible", timeout: 10_000 });
-  await openSellerComparison(page, seatSelectionCard);
+  const resultCard = (await seatSelectionCard.count()) > 0
+    ? seatSelectionCard
+    : page.locator("article.offer-card").first();
+  await resultCard.waitFor({ state: "visible", timeout: 30_000 });
+  if ((await seatSelectionCard.count()) === 0) {
+    console.warn("[record] bus result has no seat-selection capability; showing seller comparison instead");
+  }
+  await openSellerComparison(page, resultCard);
   await pause(1_200);
 
-  await page.getByRole("button", { name: "نقشه صندلی", exact: true }).first().click();
-  const seatMapDialog = page.getByRole("dialog", { name: "نقشه صندلی" });
-  await seatMapDialog.waitFor({ state: "visible" });
-  // Seat maps are provider-specific. Some live bus sellers expose the map
-  // action but return no seat inventory; keep the recording useful instead of
-  // failing the whole demo on that external capability.
-  const seat = seatMapDialog.getByRole("listitem").first();
-  try {
-    await seat.waitFor({ state: "visible", timeout: 10_000 });
-    await pause(2_000);
-  } catch {
-    console.warn("[record] bus provider returned no seat inventory; showing the empty state");
-    await pause(1_200);
+  const seatMapButton = page.getByRole("button", { name: "نقشه صندلی", exact: true }).first();
+  if ((await seatMapButton.count()) > 0) {
+    await seatMapButton.click();
+    const seatMapDialog = page.getByRole("dialog", { name: "نقشه صندلی" });
+    await seatMapDialog.waitFor({ state: "visible" });
+    // Seat maps are provider-specific. Some live bus sellers expose the map
+    // action but return no seat inventory; keep the recording useful instead of
+    // failing the whole demo on that external capability.
+    const seat = seatMapDialog.getByRole("listitem").first();
+    try {
+      await seat.waitFor({ state: "visible", timeout: 6_000 });
+      await pause(1_500);
+    } catch {
+      console.warn("[record] bus provider returned no seat inventory; showing the empty state");
+      await pause(800);
+    }
+    await seatMapDialog.getByRole("button", { name: "بستن پنجره" }).click();
+    await pause(500);
+  } else {
+    console.warn("[record] bus seller has no seat-map action; continuing to its website");
+    await pause(600);
   }
-  await seatMapDialog.getByRole("button", { name: "بستن پنجره" }).click();
-  await pause(700);
+
+  await showSellerRedirect(page);
   return resultsUrl;
 }
 
@@ -573,12 +716,18 @@ async function transcodeAndVerify(rawVideos, encodedVideo) {
   if (stream.width !== 1440 || stream.height !== 900) {
     throw new Error(`Unexpected video dimensions: ${stream.width}x${stream.height}.`);
   }
-  if (!Number.isFinite(duration) || duration <= 0 || duration >= maxDurationSeconds) {
+  if (!Number.isFinite(duration) || duration <= 0 || duration > maxDurationSeconds) {
     throw new Error(
       `Demo duration must be between 0 and ${maxDurationSeconds} seconds; got ${duration}.`,
     );
   }
-  return { duration, stream };
+  const fileSizeBytes = (await stat(encodedVideo)).size;
+  if (fileSizeBytes > maxFileSizeBytes) {
+    throw new Error(
+      `Demo file must be at most ${maxFileSizeMb} MB; got ${(fileSizeBytes / 1024 / 1024).toFixed(2)} MB.`,
+    );
+  }
+  return { duration, stream, fileSizeBytes };
 }
 
 async function recordSegment(browser, rawDirectory, options, run) {
@@ -613,6 +762,9 @@ async function recordSegment(browser, rawDirectory, options, run) {
 async function main() {
   if (!Number.isFinite(maxDurationSeconds) || maxDurationSeconds <= 0) {
     throw new Error("DEMO_MAX_DURATION_SECONDS must be a positive number.");
+  }
+  if (!Number.isFinite(maxFileSizeMb) || maxFileSizeMb <= 0) {
+    throw new Error("DEMO_MAX_FILE_SIZE_MB must be a positive number.");
   }
   if (!Number.isFinite(actionPauseScale) || actionPauseScale < 0) {
     throw new Error("DEMO_PAUSE_SCALE must be a non-negative number.");
@@ -656,10 +808,9 @@ async function main() {
       rawDirectory,
       { kind: "desktop", viewport: { width: 1440, height: 900 } },
       async (page) => {
-        await showHomeModeTabs(page);
-        await showTrainFlow(page, modes[1], liveDates.train);
         await showFlightFlow(page, modes[0], liveDates.flight);
-        return showBusFlow(page, modes[2], liveDates.bus);
+        await showTrainFlow(page, modes[1], liveDates.train, modes[0].mode);
+        return showBusFlow(page, modes[2], liveDates.bus, modes[1].mode);
       },
     );
     const mobile = await recordSegment(
@@ -682,7 +833,8 @@ async function main() {
     console.log(
       `[done] ${verification.stream.width}x${verification.stream.height}, `
       + `${verification.stream.codec_name}/${verification.stream.pix_fmt}, `
-      + `${verification.duration.toFixed(2)} seconds`,
+      + `${verification.duration.toFixed(2)} seconds, `
+      + `${(verification.fileSizeBytes / 1024 / 1024).toFixed(2)} MB`,
     );
   } finally {
     if (watchdog) clearTimeout(watchdog);

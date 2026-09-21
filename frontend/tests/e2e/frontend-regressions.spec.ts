@@ -39,7 +39,7 @@ function sellerOffer(id: string, mode: Mode, amount: number) {
       name: id === "alibaba" ? "علی‌بابا" : "اسنپ‌تریپ",
       rating: 4.7,
       review_count: 1200,
-      logo_url: null,
+      logo_url: null as string | null,
       logo_alt: null,
       logo_fallback: id === "alibaba" ? "علی‌بابا" : "اسنپ‌تریپ",
     },
@@ -325,6 +325,43 @@ test("flight and train result cards render verified operator logos", async ({ pa
   }
 });
 
+test("result cards show the real source-site logos for their seller offers", async ({ page }) => {
+  const onePixelPng = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+    "base64",
+  );
+  await page.route("**/api/logo?*", async (route) => {
+    await route.fulfill({ status: 200, contentType: "image/png", body: onePixelPng });
+  });
+  await mockNearbyDates(page);
+
+  const alibaba = sellerOffer("alibaba", "flight", 1_600_000);
+  alibaba.seller.logo_url = "https://cdn.alibaba.ir/h2/desktop/assets/images/shawl_logotype-d6b14ca0.svg";
+  const snapptrip = sellerOffer("snapptrip", "flight", 1_650_000);
+  snapptrip.seller.logo_url = "https://store.snapptrip.com/assets/builds/website/_next/static/media/logo.12xjc4xr19yoa.png";
+  const offer = offerGroup({
+    id: "provider-logo-offer",
+    mode: "flight",
+    operator: "ایران ایرتور",
+    logoUrl: "https://cdn.alibaba.ir/static/img/airlines/Domestic/B9.png",
+    date: dateInTehran(7),
+    sellers: [alibaba, snapptrip],
+  });
+  await gotoCompletedResults(page, {
+    searchId: `src_${"d".repeat(32)}`,
+    mode: "flight",
+    offers: [offer],
+  });
+
+  const sources = page.locator("article.offer-card--flight .offer-card__sources");
+  await expect(sources).toHaveAttribute("aria-label", "منابع قیمت: علی‌بابا، اسنپ‌تریپ");
+  const logos = sources.locator(".offer-card__source-logo img");
+  await expect(logos).toHaveCount(2);
+  await expect(logos.nth(0)).toHaveAttribute("src", /\/api\/logo\?url=/);
+  await expect(logos.nth(1)).toHaveAttribute("src", /\/api\/logo\?url=/);
+  await expect.poll(() => logos.nth(0).evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBe(1);
+});
+
 test("flight, train, and bus operator logos have a readable fallback", async ({ page }) => {
   await mockNearbyDates(page);
 
@@ -388,6 +425,55 @@ test("one grouped journey renders one card and the combined seller count", async
   await expect(page.locator("article.offer-card")).toHaveCount(1);
   await expect(page.locator("article.offer-card")).toContainText("کمترین قیمت در ۲ فروشگاه");
   await expect(page.getByRole("heading", { name: /۱ گزینه اتوبوس/ })).toBeVisible();
+});
+
+test("selected nearby date uses the loaded result price when its provider status is unavailable", async ({ page }) => {
+  const searchId = `src_${"c".repeat(32)}`;
+  const selectedDate = dateInTehran(7);
+  const offer = offerGroup({
+    id: "selected-date-price-offer",
+    mode: "flight",
+    operator: "ایران ایرتور",
+    date: selectedDate,
+  });
+  await page.route("**/api/travel/nearby-dates", async (route) => {
+    await route.fulfill({
+      status: 200,
+      json: {
+        mode: "flight",
+        origin: "تهران",
+        destination: "مشهد",
+        selected_date: selectedDate,
+        dates: [-2, -1, 0, 1, 2].map((offset) => ({
+          date: shiftDate(selectedDate, offset),
+          offset_days: offset,
+          status: offset === 0 ? "provider_unavailable" : "available",
+          minimum_price: offset === 0
+            ? null
+            : { amount: 1_700_000 + offset * 20_000, currency: "IRT" },
+          offer_count: offset === 0 ? 0 : 1,
+          providers_queried: 2,
+          providers_succeeded: offset === 0 ? 0 : 2,
+          provider_failures: offset === 0
+            ? [{ provider: "seller", message: "دریافت قیمت ممکن نشد." }]
+            : [],
+        })),
+      },
+    });
+  });
+  await gotoCompletedResults(page, {
+    searchId,
+    mode: "flight",
+    date: selectedDate,
+    offers: [offer],
+  });
+
+  const selectedDateCard = page.getByRole("navigation", { name: "انتخاب تاریخ سفر" })
+    .locator('[aria-current="date"]');
+  await expect(selectedDateCard).toContainText("۱,۶۰۰,۰۰۰ تومان");
+  await expect(selectedDateCard).not.toContainText("قیمت در دسترس نیست");
+  await expect(selectedDateCard).toHaveClass(/\bis-available\b/);
+  await expect(selectedDateCard).not.toHaveClass(/\bis-provider_unavailable\b/);
 });
 
 test("passenger picker enforces infant, total, and adult-only mode limits", async ({ page }) => {

@@ -361,27 +361,29 @@ function DateRail({
       {dates.map((value) => {
         const isOutsideRange = value < minimumDate || (maximumDate != null && value > maximumDate);
         const option = nearbyDates?.find((candidate) => candidate.date === value);
+        const hasSelectedDateResults = value === selectedDate && lowestPrice != null;
         const dayStatus = isOutsideRange
           ? value < defaultDepartureDate(0) ? "گذشته" : "غیرفعال"
-          : option?.status === "available"
-          ? option.minimum_price != null
-            ? <>{price(option.minimum_price.amount)} <em>تومان</em></>
-            : "موجود"
-          : option?.status === "sold_out"
-            ? "تکمیل ظرفیت"
-            : option?.status === "availability_unknown"
-              ? "در حال بررسی"
-            : option?.status === "provider_unavailable"
-              ? "قیمت در دسترس نیست"
-              : option?.status === "past"
-                ? "گذشته"
-                : value === selectedDate && lowestPrice != null
-                  ? <>{price(lowestPrice)} <em>تومان</em></>
-                  : calendarLoading
-                    ? "در حال بررسی"
-                    : "در حال بررسی";
+          : hasSelectedDateResults
+            ? <>{price(lowestPrice)} <em>تومان</em></>
+            : option?.status === "available"
+              ? option.minimum_price != null
+                ? <>{price(option.minimum_price.amount)} <em>تومان</em></>
+                : "موجود"
+              : option?.status === "sold_out"
+                ? "تکمیل ظرفیت"
+                : option?.status === "availability_unknown"
+                  ? "در حال بررسی"
+                  : option?.status === "provider_unavailable"
+                    ? "قیمت در دسترس نیست"
+                    : option?.status === "past"
+                      ? "گذشته"
+                      : calendarLoading
+                        ? "در حال بررسی"
+                        : "در حال بررسی";
+        const statusClass = hasSelectedDateResults ? "available" : option?.status;
         return (
-          <button ref={value === selectedDate ? activeDateRef : undefined} key={value} type="button" disabled={disabled || isOutsideRange} className={`results-workspace__date-button ${value === selectedDate ? "is-active" : ""} ${option ? `is-${option.status}` : ""}`} onClick={() => onSelect(value)} aria-current={value === selectedDate ? "date" : undefined}>
+          <button ref={value === selectedDate ? activeDateRef : undefined} key={value} type="button" disabled={disabled || isOutsideRange} className={`results-workspace__date-button ${value === selectedDate ? "is-active" : ""} ${statusClass ? `is-${statusClass}` : ""}`} onClick={() => onSelect(value)} aria-current={value === selectedDate ? "date" : undefined}>
             <span>{persianWeekday(value)}</span><small>{compactPersianDate(value)}</small>
             <b>{dayStatus}</b>
           </button>
@@ -711,6 +713,20 @@ export function ResultsWorkspace({
   const activeMaximumDate = activeLeg === "outbound" && returnDate
     ? shiftDate(returnDate, -1)
     : undefined;
+  const resultRoute = `${modeLabel(mode)} از ${locationName(activeOrigin)} به ${locationName(activeDestination)}`;
+  const offersHeading = !searchReady
+    ? "مسیر سفر را تکمیل کنید"
+    : isLoading
+      ? `در حال جست‌وجوی ${resultRoute}`
+      : searchError
+        ? "جست‌وجوی زنده انجام نشد"
+        : activeResults?.providers_succeeded === 0
+          ? `نتیجه‌ای برای ${resultRoute} دریافت نشد`
+          : offers.length === 0
+            ? `هیچ موردی برای ${resultRoute} پیدا نشد`
+            : visibleOffers.length === 0
+              ? "هیچ گزینه‌ای با این فیلترها پیدا نشد"
+              : `${toFa(visibleOffers.length)} گزینه ${resultRoute}`;
 
   return <main className="results-page results-workspace">
     <Header />
@@ -756,8 +772,7 @@ export function ResultsWorkspace({
         </div>
         <section id="active-leg-results" role={returnDate ? "tabpanel" : undefined} aria-labelledby={returnDate ? `${activeLeg}-leg-tab` : undefined} className={`offers-area ${isLoading ? "is-loading" : ""}`} aria-live="polite" aria-busy={isLoading}>
           <div className="offers-title">
-            <h1>{!searchReady ? "مسیر سفر را تکمیل کنید" : isLoading ? <>در حال جست‌وجوی {modeLabel(mode)} از {locationName(activeOrigin)} به {locationName(activeDestination)}</> : <>{toFa(visibleOffers.length)} گزینه {modeLabel(mode)} برای {locationName(activeOrigin)} به {locationName(activeDestination)}</>}</h1>
-            <div className="results-workspace__desktop-sort"><SortMenu intent={intent} fastestAvailable={fastestAvailable} searchReady={searchReady && !isLoading} onChange={updateIntent} /></div>
+            <h1>{offersHeading}</h1>
           </div>
           <IntentTabs intent={intent} fastestAvailable={fastestAvailable} searchReady={searchReady && !isLoading} onChange={updateIntent} />
           <p className="results-workspace__explanation"><SearchIcon size={17} /> {searchReady ? intentExplanation : "برای دریافت نتایج زنده، مبدأ و مقصد را ویرایش کنید."}</p>

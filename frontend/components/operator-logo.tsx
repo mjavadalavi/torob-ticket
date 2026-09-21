@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { localizeTravelValue } from "@/lib/content";
-import type { TravelMode } from "@/lib/types";
+import type { SellerOffer, TravelMode } from "@/lib/types";
 
 const LOGO_LOAD_TIMEOUT_MS = 6_000;
 const TRUSTED_LOGO_HOSTS = new Set([
@@ -115,5 +115,39 @@ export function OperatorLogo({
       alt={alt}
       fallback={localizedFallback === "—" ? name : localizedFallback}
     />
+  );
+}
+
+export function ProviderLogoStrip({ sellers }: { sellers: SellerOffer[] }) {
+  const seen = new Set<string>();
+  const visibleSellers = sellers.filter((offer) => {
+    const key = offer.seller.id || offer.provider;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 4);
+
+  if (visibleSellers.length === 0) return null;
+
+  const names = visibleSellers.map((offer) => offer.seller.name).join("، ");
+  const remainingCount = sellers.length - visibleSellers.length;
+
+  return (
+    <div className="offer-card__sources" aria-label={`منابع قیمت: ${names}`}>
+      <small>قیمت از</small>
+      <span className="offer-card__source-logos" aria-hidden="true">
+        {visibleSellers.map((offer) => (
+          <TrustedLogo
+            key={`${offer.provider}-${offer.seller.id}`}
+            className="offer-card__source-logo"
+            name={offer.seller.name}
+            url={offer.seller.logo_url}
+            alt={`نشان فروشنده ${offer.seller.name}`}
+            fallback={offer.seller.logo_fallback}
+          />
+        ))}
+        {remainingCount > 0 && <b className="offer-card__source-count">+{remainingCount}</b>}
+      </span>
+    </div>
   );
 }

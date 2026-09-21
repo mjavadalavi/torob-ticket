@@ -67,7 +67,7 @@ export default async function SellersPage({
               {stops && <li><ModeIcon mode={offer.mode} size={18} /> {stops}</li>}
               {hasModeSummary && <li><ModeSummaryFeature details={offer.mode_details} attributes={offer.attributes} /></li>}
             </ul>
-            {supports(offer.recommended_capabilities, "torob_guarantee") && <section className="guarantee-box"><h3><ShieldIcon /> تضمین ترب</h3><p>فروشندهٔ پیشنهاد منتخب برای این بلیت نشان تضمین ترب را اعلام کرده است.</p></section>}
+            {supports(offer.recommended_capabilities, "torob_guarantee") && <section className="guarantee-box"><h3><ShieldIcon /> تضمین ترب</h3><p>این فروشنده برای همین گزینه نشان تضمین ترب را دارد.</p></section>}
           </aside>
           <section className="seller-main">
             <article className="journey-summary">
